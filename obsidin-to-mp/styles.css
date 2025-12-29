@@ -1,0 +1,81 @@
+/* 微信公众号发布面板样式 */
+.wechat-mp-publisher-sidebar {
+  height: 100%;
+  padding: 10px;
+}
+
+/* 控制面板标题 */
+.wechat-mp-publisher-sidebar h2 {
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+/* 按钮样式 */
+.wechat-mp-publisher-sidebar button {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.wechat-mp-publisher-sidebar button:hover {
+  background-color: var(--background-secondary-alt);
+}
+
+.wechat-mp-publisher-sidebar button.mod-cta {
+  background-color: var(--interactive-accent);
+  color: white;
+}
+
+.wechat-mp-publisher-sidebar button.mod-cta:hover {
+  background-color: var(--interactive-accent-hover);
+}
+
+/* 封面设置区域 */
+.wechat-mp-publisher-sidebar div {    
+  margin-bottom: 15px;
+}
+
+.wechat-mp-publisher-sidebar h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-normal);
+}
+
+/* 输入框样式 */
+.wechat-mp-publisher-sidebar input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+}
+
+/* 封面预览区域 */
+.wechat-mp-publisher-sidebar div[style*="border: 1px solid"] {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* 提示文本 */
+.wechat-mp-publisher-sidebar p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 15px;
+}
