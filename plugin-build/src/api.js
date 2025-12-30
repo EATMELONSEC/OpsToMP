@@ -378,4 +378,116 @@ export class WeChatMPAPI {
       throw error;
     }
   }
+
+  async getDraftList(accessToken, offset = 0, count = 20, noContent = 0) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/batchget?access_token=${accessToken}`;
+      
+      const data = JSON.stringify({
+        offset: offset,
+        count: count,
+        no_content: noContent
+      });
+      
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: 'POST',
+          hostname: 'api.weixin.qq.com',
+          path: `/cgi-bin/draft/batchget?access_token=${accessToken}`,
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        
+        const req = https.request(options, (res) => {
+          let responseData = '';
+          res.on('data', (chunk) => { responseData += chunk; });
+          res.on('end', () => {
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              reject(new Error('解析响应失败'));
+            }
+          });
+        });
+        
+        req.on('error', (err) => reject(err));
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('请求超时'));
+        });
+        
+        req.write(data);
+        req.end();
+      });
+      
+      if (response.errcode) {
+        throw new Error(`获取草稿列表失败: ${response.errmsg}`);
+      }
+      
+      return response;
+      
+    } catch (error) {
+      console.error('获取草稿列表错误:', error);
+      throw error;
+    }
+  }
+
+  async deleteDraft(accessToken, mediaId) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/delete?access_token=${accessToken}`;
+      
+      const data = JSON.stringify({
+        media_id: mediaId
+      });
+      
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: 'POST',
+          hostname: 'api.weixin.qq.com',
+          path: `/cgi-bin/draft/delete?access_token=${accessToken}`,
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        
+        const req = https.request(options, (res) => {
+          let responseData = '';
+          res.on('data', (chunk) => { responseData += chunk; });
+          res.on('end', () => {
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              reject(new Error('解析响应失败'));
+            }
+          });
+        });
+        
+        req.on('error', (err) => reject(err));
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('请求超时'));
+        });
+        
+        req.write(data);
+        req.end();
+      });
+      
+      if (response.errcode) {
+        throw new Error(`删除草稿失败: ${response.errmsg}`);
+      }
+      
+      return response;
+      
+    } catch (error) {
+      console.error('删除草稿错误:', error);
+      throw error;
+    }
+  }
 }

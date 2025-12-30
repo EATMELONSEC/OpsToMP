@@ -1,4 +1,4 @@
-import { ItemView } from 'obsidian';
+import { ItemView, Notice } from 'obsidian';
 
 export class PublisherSidebarView extends ItemView {
   constructor(leaf, plugin) {
@@ -6,6 +6,8 @@ export class PublisherSidebarView extends ItemView {
     this.plugin = plugin;
     this.coverImage = '';
     this.coverFile = null;
+    this.drafts = [];
+    this.currentView = 'main';
   }
 
   getViewType() {
@@ -21,6 +23,11 @@ export class PublisherSidebarView extends ItemView {
   }
 
   async onOpen() {
+    this.renderMainView();
+  }
+
+  renderMainView() {
+    this.currentView = 'main';
     const container = this.contentEl;
     container.empty();
 
@@ -93,6 +100,19 @@ export class PublisherSidebarView extends ItemView {
       await this.plugin.uploadToDraftBox(this.coverFile);
     });
 
+    const divider = container.createEl('hr');
+    divider.style.margin = '15px 0';
+    divider.style.border = 'none';
+    divider.style.borderTop = '1px solid var(--background-modifier-border)';
+
+    const draftListButton = container.createEl('button', { text: '查看草稿列表' });
+    draftListButton.style.width = '100%';
+    draftListButton.style.marginBottom = '10px';
+    draftListButton.style.padding = '8px';
+    draftListButton.addEventListener('click', async () => {
+      await this.loadDraftList();
+    });
+
     const networkTestSection = container.createEl('div');
     networkTestSection.style.marginBottom = '15px';
     
@@ -142,6 +162,134 @@ export class PublisherSidebarView extends ItemView {
     noteEl.style.fontSize = '12px';
     noteEl.style.color = 'var(--text-muted)';
     noteEl.textContent = '提示：上传前请确保已在设置中配置微信公众号信息';
+  }
+
+  async loadDraftList() {
+    this.currentView = 'drafts';
+    const container = this.contentEl;
+    container.empty();
+
+    const header = container.createEl('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.marginBottom = '15px';
+
+    const titleEl = header.createEl('h2', { text: '草稿列表' });
+    titleEl.style.margin = '0';
+
+    const backButton = header.createEl('button', { text: '← 返回' });
+    backButton.style.padding = '4px 8px';
+    backButton.addEventListener('click', () => {
+      this.renderMainView();
+    });
+
+    const loadingEl = container.createEl('div', { text: '正在加载草稿列表...' });
+    loadingEl.style.textAlign = 'center';
+    loadingEl.style.padding = '20px';
+    loadingEl.style.color = 'var(--text-muted)';
+
+    try {
+      const accessToken = await this.plugin.api.getAccessToken();
+      const result = await this.plugin.api.getDraftList(accessToken, 0, 20, 1);
+      
+      this.drafts = result.item || [];
+      
+      loadingEl.remove();
+
+      if (this.drafts.length === 0) {
+        const emptyEl = container.createEl('div', { text: '暂无草稿' });
+        emptyEl.style.textAlign = 'center';
+        emptyEl.style.padding = '20px';
+        emptyEl.style.color = 'var(--text-muted)';
+        return;
+      }
+
+      const listContainer = container.createEl('div');
+      listContainer.style.maxHeight = '400px';
+      listContainer.style.overflowY = 'auto';
+
+      this.drafts.forEach((draft, index) => {
+        const article = draft.content.news_item[0];
+        
+        const draftItem = listContainer.createEl('div');
+        draftItem.style.border = '1px solid var(--background-modifier-border)';
+        draftItem.style.borderRadius = '4px';
+        draftItem.style.padding = '12px';
+        draftItem.style.marginBottom = '10px';
+        draftItem.style.backgroundColor = 'var(--background-secondary)';
+
+        const draftTitle = draftItem.createEl('h4', { text: article.title });
+        draftTitle.style.margin = '0 0 8px 0';
+        draftTitle.style.fontSize = '14px';
+        draftTitle.style.fontWeight = '600';
+
+        const draftMeta = draftItem.createEl('div');
+        draftMeta.style.fontSize = '12px';
+        draftMeta.style.color = 'var(--text-muted)';
+        draftMeta.style.marginBottom = '8px';
+        draftMeta.textContent = `ID: ${article.thumb_media_id || draft.media_id}`;
+
+        const actions = draftItem.createEl('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '8px';
+
+        const publishButton = actions.createEl('button', { text: '发布' });
+        publishButton.style.flex = '1';
+        publishButton.style.padding = '4px 8px';
+        publishButton.style.fontSize = '12px';
+        publishButton.addEventListener('click', async () => {
+          if (confirm(`确定要发布草稿"${article.title}"吗？`)) {
+            try {
+              const publishResult = await this.plugin.api.publishDraft(accessToken, draft.media_id);
+              new Notice(`发布成功！文章ID: ${publishResult.publish_id}`, 5000);
+              await this.loadDraftList();
+            } catch (error) {
+              new Notice(`发布失败: ${error.message}`, 5000);
+            }
+          }
+        });
+
+        const deleteButton = actions.createEl('button', { text: '删除' });
+        deleteButton.style.flex = '1';
+        deleteButton.style.padding = '4px 8px';
+        deleteButton.style.fontSize = '12px';
+        deleteButton.style.backgroundColor = 'var(--interactive-danger)';
+        deleteButton.style.color = 'var(--text-on-accent)';
+        deleteButton.addEventListener('click', async () => {
+          if (confirm(`确定要删除草稿"${article.title}"吗？此操作不可恢复！`)) {
+            try {
+              await this.plugin.api.deleteDraft(accessToken, draft.media_id);
+              new Notice('删除成功', 3000);
+              await this.loadDraftList();
+            } catch (error) {
+              new Notice(`删除失败: ${error.message}`, 5000);
+            }
+          }
+        });
+      });
+
+      const totalCount = container.createEl('div');
+      totalCount.style.marginTop = '10px';
+      totalCount.style.fontSize = '12px';
+      totalCount.style.color = 'var(--text-muted)';
+      totalCount.style.textAlign = 'center';
+      totalCount.textContent = `共 ${this.drafts.length} 个草稿`;
+
+    } catch (error) {
+      loadingEl.remove();
+      const errorEl = container.createEl('div', { text: `加载失败: ${error.message}` });
+      errorEl.style.textAlign = 'center';
+      errorEl.style.padding = '20px';
+      errorEl.style.color = 'var(--text-error)';
+      
+      const retryButton = container.createEl('button', { text: '重试' });
+      retryButton.style.display = 'block';
+      retryButton.style.margin = '10px auto';
+      retryButton.addEventListener('click', () => {
+        this.loadDraftList();
+      });
+    }
   }
 
   async onClose() {

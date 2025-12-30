@@ -366,6 +366,104 @@ var WeChatMPAPI = class {
       throw error;
     }
   }
+  async getDraftList(accessToken, offset = 0, count = 20, noContent = 0) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/batchget?access_token=${accessToken}`;
+      const data = JSON.stringify({
+        offset,
+        count,
+        no_content: noContent
+      });
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: "POST",
+          hostname: "api.weixin.qq.com",
+          path: `/cgi-bin/draft/batchget?access_token=${accessToken}`,
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        const req = import_https.default.request(options, (res) => {
+          let responseData = "";
+          res.on("data", (chunk) => {
+            responseData += chunk;
+          });
+          res.on("end", () => {
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
+            }
+          });
+        });
+        req.on("error", (err) => reject(err));
+        req.on("timeout", () => {
+          req.destroy();
+          reject(new Error("\u8BF7\u6C42\u8D85\u65F6"));
+        });
+        req.write(data);
+        req.end();
+      });
+      if (response.errcode) {
+        throw new Error(`\u83B7\u53D6\u8349\u7A3F\u5217\u8868\u5931\u8D25: ${response.errmsg}`);
+      }
+      return response;
+    } catch (error) {
+      console.error("\u83B7\u53D6\u8349\u7A3F\u5217\u8868\u9519\u8BEF:", error);
+      throw error;
+    }
+  }
+  async deleteDraft(accessToken, mediaId) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/delete?access_token=${accessToken}`;
+      const data = JSON.stringify({
+        media_id: mediaId
+      });
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: "POST",
+          hostname: "api.weixin.qq.com",
+          path: `/cgi-bin/draft/delete?access_token=${accessToken}`,
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        const req = import_https.default.request(options, (res) => {
+          let responseData = "";
+          res.on("data", (chunk) => {
+            responseData += chunk;
+          });
+          res.on("end", () => {
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
+            }
+          });
+        });
+        req.on("error", (err) => reject(err));
+        req.on("timeout", () => {
+          req.destroy();
+          reject(new Error("\u8BF7\u6C42\u8D85\u65F6"));
+        });
+        req.write(data);
+        req.end();
+      });
+      if (response.errcode) {
+        throw new Error(`\u5220\u9664\u8349\u7A3F\u5931\u8D25: ${response.errmsg}`);
+      }
+      return response;
+    } catch (error) {
+      console.error("\u5220\u9664\u8349\u7A3F\u9519\u8BEF:", error);
+      throw error;
+    }
+  }
 };
 
 // src/sidebar.js
@@ -376,6 +474,8 @@ var PublisherSidebarView = class extends import_obsidian.ItemView {
     this.plugin = plugin;
     this.coverImage = "";
     this.coverFile = null;
+    this.drafts = [];
+    this.currentView = "main";
   }
   getViewType() {
     return "wechat-mp-publisher-sidebar";
@@ -387,6 +487,10 @@ var PublisherSidebarView = class extends import_obsidian.ItemView {
     return "paper-plane";
   }
   async onOpen() {
+    this.renderMainView();
+  }
+  renderMainView() {
+    this.currentView = "main";
     const container = this.contentEl;
     container.empty();
     const titleEl = container.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F" });
@@ -450,6 +554,17 @@ var PublisherSidebarView = class extends import_obsidian.ItemView {
     uploadButton.addEventListener("click", async () => {
       await this.plugin.uploadToDraftBox(this.coverFile);
     });
+    const divider = container.createEl("hr");
+    divider.style.margin = "15px 0";
+    divider.style.border = "none";
+    divider.style.borderTop = "1px solid var(--background-modifier-border)";
+    const draftListButton = container.createEl("button", { text: "\u67E5\u770B\u8349\u7A3F\u5217\u8868" });
+    draftListButton.style.width = "100%";
+    draftListButton.style.marginBottom = "10px";
+    draftListButton.style.padding = "8px";
+    draftListButton.addEventListener("click", async () => {
+      await this.loadDraftList();
+    });
     const networkTestSection = container.createEl("div");
     networkTestSection.style.marginBottom = "15px";
     const networkTestLabel = networkTestSection.createEl("h3", { text: "\u7F51\u7EDC\u6D4B\u8BD5" });
@@ -492,6 +607,114 @@ var PublisherSidebarView = class extends import_obsidian.ItemView {
     noteEl.style.fontSize = "12px";
     noteEl.style.color = "var(--text-muted)";
     noteEl.textContent = "\u63D0\u793A\uFF1A\u4E0A\u4F20\u524D\u8BF7\u786E\u4FDD\u5DF2\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7\u4FE1\u606F";
+  }
+  async loadDraftList() {
+    this.currentView = "drafts";
+    const container = this.contentEl;
+    container.empty();
+    const header = container.createEl("div");
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.style.marginBottom = "15px";
+    const titleEl = header.createEl("h2", { text: "\u8349\u7A3F\u5217\u8868" });
+    titleEl.style.margin = "0";
+    const backButton = header.createEl("button", { text: "\u2190 \u8FD4\u56DE" });
+    backButton.style.padding = "4px 8px";
+    backButton.addEventListener("click", () => {
+      this.renderMainView();
+    });
+    const loadingEl = container.createEl("div", { text: "\u6B63\u5728\u52A0\u8F7D\u8349\u7A3F\u5217\u8868..." });
+    loadingEl.style.textAlign = "center";
+    loadingEl.style.padding = "20px";
+    loadingEl.style.color = "var(--text-muted)";
+    try {
+      const accessToken = await this.plugin.api.getAccessToken();
+      const result = await this.plugin.api.getDraftList(accessToken, 0, 20, 1);
+      this.drafts = result.item || [];
+      loadingEl.remove();
+      if (this.drafts.length === 0) {
+        const emptyEl = container.createEl("div", { text: "\u6682\u65E0\u8349\u7A3F" });
+        emptyEl.style.textAlign = "center";
+        emptyEl.style.padding = "20px";
+        emptyEl.style.color = "var(--text-muted)";
+        return;
+      }
+      const listContainer = container.createEl("div");
+      listContainer.style.maxHeight = "400px";
+      listContainer.style.overflowY = "auto";
+      this.drafts.forEach((draft, index) => {
+        const article = draft.content.news_item[0];
+        const draftItem = listContainer.createEl("div");
+        draftItem.style.border = "1px solid var(--background-modifier-border)";
+        draftItem.style.borderRadius = "4px";
+        draftItem.style.padding = "12px";
+        draftItem.style.marginBottom = "10px";
+        draftItem.style.backgroundColor = "var(--background-secondary)";
+        const draftTitle = draftItem.createEl("h4", { text: article.title });
+        draftTitle.style.margin = "0 0 8px 0";
+        draftTitle.style.fontSize = "14px";
+        draftTitle.style.fontWeight = "600";
+        const draftMeta = draftItem.createEl("div");
+        draftMeta.style.fontSize = "12px";
+        draftMeta.style.color = "var(--text-muted)";
+        draftMeta.style.marginBottom = "8px";
+        draftMeta.textContent = `ID: ${article.thumb_media_id || draft.media_id}`;
+        const actions = draftItem.createEl("div");
+        actions.style.display = "flex";
+        actions.style.gap = "8px";
+        const publishButton = actions.createEl("button", { text: "\u53D1\u5E03" });
+        publishButton.style.flex = "1";
+        publishButton.style.padding = "4px 8px";
+        publishButton.style.fontSize = "12px";
+        publishButton.addEventListener("click", async () => {
+          if (confirm(`\u786E\u5B9A\u8981\u53D1\u5E03\u8349\u7A3F"${article.title}"\u5417\uFF1F`)) {
+            try {
+              const publishResult = await this.plugin.api.publishDraft(accessToken, draft.media_id);
+              new import_obsidian.Notice(`\u53D1\u5E03\u6210\u529F\uFF01\u6587\u7AE0ID: ${publishResult.publish_id}`, 5e3);
+              await this.loadDraftList();
+            } catch (error) {
+              new import_obsidian.Notice(`\u53D1\u5E03\u5931\u8D25: ${error.message}`, 5e3);
+            }
+          }
+        });
+        const deleteButton = actions.createEl("button", { text: "\u5220\u9664" });
+        deleteButton.style.flex = "1";
+        deleteButton.style.padding = "4px 8px";
+        deleteButton.style.fontSize = "12px";
+        deleteButton.style.backgroundColor = "var(--interactive-danger)";
+        deleteButton.style.color = "var(--text-on-accent)";
+        deleteButton.addEventListener("click", async () => {
+          if (confirm(`\u786E\u5B9A\u8981\u5220\u9664\u8349\u7A3F"${article.title}"\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\uFF01`)) {
+            try {
+              await this.plugin.api.deleteDraft(accessToken, draft.media_id);
+              new import_obsidian.Notice("\u5220\u9664\u6210\u529F", 3e3);
+              await this.loadDraftList();
+            } catch (error) {
+              new import_obsidian.Notice(`\u5220\u9664\u5931\u8D25: ${error.message}`, 5e3);
+            }
+          }
+        });
+      });
+      const totalCount = container.createEl("div");
+      totalCount.style.marginTop = "10px";
+      totalCount.style.fontSize = "12px";
+      totalCount.style.color = "var(--text-muted)";
+      totalCount.style.textAlign = "center";
+      totalCount.textContent = `\u5171 ${this.drafts.length} \u4E2A\u8349\u7A3F`;
+    } catch (error) {
+      loadingEl.remove();
+      const errorEl = container.createEl("div", { text: `\u52A0\u8F7D\u5931\u8D25: ${error.message}` });
+      errorEl.style.textAlign = "center";
+      errorEl.style.padding = "20px";
+      errorEl.style.color = "var(--text-error)";
+      const retryButton = container.createEl("button", { text: "\u91CD\u8BD5" });
+      retryButton.style.display = "block";
+      retryButton.style.margin = "10px auto";
+      retryButton.addEventListener("click", () => {
+        this.loadDraftList();
+      });
+    }
   }
   async onClose() {
     this.contentEl.empty();
