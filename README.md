@@ -1,22 +1,20 @@
-# MdToMp - Obsidian笔记转微信公众号工具集 / Obsidian to WeChat Official Account Tool Suite
+# OpsToMP - Obsidian笔记转微信公众号工具 / Obsidian to WeChat Official Account Tool
 
-一个完整的Obsidian笔记到微信公众号的转换和发布工具集，包含Obsidian插件和Python工具两种使用方式。
+一个功能完整的Obsidian插件，用于将Markdown笔记转换并发布到微信公众号。
 
-A complete toolkit for converting and publishing Obsidian Markdown notes to WeChat Official Accounts, including both an Obsidian plugin and Python tools.
+A comprehensive Obsidian plugin for converting and publishing Markdown notes to WeChat Official Accounts.
 
 ---
 
 ## 项目简介 / Project Introduction
 
-MdToMp提供了一套完整的解决方案，帮助用户将Obsidian中的Markdown笔记转换并发布到微信公众号。项目包含两个独立但功能互补的工具：
+OpsToMP是一个专为Obsidian设计的插件，提供完整的解决方案，帮助用户将Obsidian中的Markdown笔记转换并发布到微信公众号。
 
-MdToMp provides a complete solution to help users convert and publish Markdown notes from Obsidian to WeChat Official Accounts. The project includes two independent but complementary tools:
+OpsToMP is an Obsidian plugin that provides a complete solution to help users convert and publish Markdown notes from Obsidian to WeChat Official Accounts.
 
 - **Obsidian插件**：集成在Obsidian中的插件，提供图形化界面和实时预览
-- **Python工具**：命令行工具，适合批量处理和自动化脚本
 
 - **Obsidian Plugin**: Integrated plugin in Obsidian with graphical interface and real-time preview
-- **Python Tools**: Command-line tools suitable for batch processing and automation scripts
 
 ---
 
@@ -28,8 +26,8 @@ MdToMp provides a complete solution to help users convert and publish Markdown n
 - 👁️ **实时预览**：在Obsidian中预览微信公众号格式的渲染效果
 - 📤 **上传草稿箱**：一键上传到微信公众号草稿箱
 - 🚀 **直接发布**：支持直接发布到微信公众号
-- 🖼️ **图片支持**：自动上传本地图片到微信服务器
-- 🎨 **样式美化**：自动应用微信公众号风格的样式
+- 🖼️ **图片支持**：自动上传本地图片到微信服务器，支持`file:///` URL和Obsidian内部链接
+- 🎨 **样式美化**：自动应用微信公众号风格的样式，支持多种主题
 - 🔒 **安全防护**：内置XSS防护，过滤危险标签和属性
 - 🌐 **网络测试**：测试网络连接和API密钥有效性
 - ✨ **一键排版**：支持多种排版选项，包括段落间距、标题格式、图片优化、引用样式、代码块美化、列表格式优化、取消多余换行
@@ -40,25 +38,13 @@ MdToMp provides a complete solution to help users convert and publish Markdown n
 - 👁️ **Real-time Preview**: Preview WeChat Official Account rendering effects in Obsidian
 - 📤 **Upload to Drafts**: One-click upload to WeChat Official Account drafts
 - 🚀 **Direct Publishing**: Support direct publishing to WeChat Official Account
-- 🖼️ **Image Support**: Automatically upload local images to WeChat server
-- 🎨 **Style Beautification**: Automatically apply WeChat Official Account style
+- 🖼️ **Image Support**: Automatically upload local images to WeChat server, supporting `file:///` URLs and Obsidian internal links
+- 🎨 **Style Beautification**: Automatically apply WeChat Official Account style with multiple themes support
 - 🔒 **Security Protection**: Built-in XSS protection, filtering dangerous tags and attributes
 - 🌐 **Network Testing**: Test network connection and API key validity
 - ✨ **One-Click Formatting**: Support multiple formatting options including paragraph spacing, heading unification, image optimization, quote styling, code block beautification, list formatting, and removing extra line breaks
 - 📋 **Content Management**: View and manage drafts and published articles lists
 - 🗑️ **Delete Function**: Delete drafts or published articles
-
-### Python工具功能 / Python Tools Features
-
-- 🔄 **批量转换**：支持批量处理多个Markdown文件
-- 📋 **命令行操作**：适合脚本和自动化场景
-- 🖼️ **图片上传**：自动处理本地图片上传
-- 🧪 **测试工具**：提供Token测试和功能验证工具
-
-- 🔄 **Batch Conversion**: Support batch processing of multiple Markdown files
-- 📋 **Command-line Operation**: Suitable for scripting and automation scenarios
-- 🖼️ **Image Upload**: Automatically handle local image uploads
-- 🧪 **Testing Tools**: Provide Token testing and functionality verification tools
 
 ---
 
@@ -68,13 +54,21 @@ MdToMp provides a complete solution to help users convert and publish Markdown n
 OpsToMP/
 ├── plugin-build/              # Obsidian插件构建目录 / Obsidian plugin build directory
 │   ├── src/                   # 源代码 / Source code
+│   │   ├── api.js            # 微信公众号API封装 / WeChat Official Account API wrapper
 │   │   ├── main.js           # 插件主文件 / Plugin main file
+│   │   ├── settings.js       # 设置页面 / Settings page
+│   │   ├── sidebar.js        # 侧边栏视图 / Sidebar view
+│   │   ├── styles.css        # 样式文件 / Styles file
+│   │   └── utils.js          # 工具函数 / Utility functions
+│   ├── build/                # 构建输出 / Build output (用于发布 / For release)
+│   │   ├── main.js           # 编译后的插件 / Compiled plugin
+│   │   ├── manifest.json     # 插件清单 / Plugin manifest
 │   │   └── styles.css        # 样式文件 / Styles file
-│   └── build/                # 构建输出 / Build output (用于发布 / For release)
-│       ├── main.js           # 编译后的插件 / Compiled plugin
-│       ├── manifest.json     # 插件清单 / Plugin manifest
-│       └── styles.css        # 样式文件 / Styles file
-├── README.md                 # 项目说明文档 / Project documentation
+│   ├── esbuild.config.mjs    # esbuild配置文件 / esbuild configuration
+│   ├── package.json          # 项目依赖配置 / Project dependencies
+│   └── package-lock.json     # 依赖锁定文件 / Dependencies lock file
+├── README.md                 # 项目说明文档 / Project documentation (中文)
+├── README_EN.md              # 英文说明文档 / Project documentation (English)
 ├── LICENSE                  # 许可证文件 / License file
 └── .gitignore               # Git忽略文件 / Git ignore file
 ```
@@ -89,9 +83,9 @@ OpsToMP/
 
 1. 下载最新版本的插件文件 / Download the latest plugin files
 2. 将文件复制到Obsidian的插件目录 / Copy files to Obsidian plugins directory:
-   - Windows: `%APPDATA%\Obsidian\plugins\obsidin-to-mp\`
-   - macOS: `~/Library/Application Support/Obsidian/Plugins/obsidin-to-mp/`
-   - Linux: `~/.config/obsidian/plugins/obsidin-to-mp/`
+   - Windows: `%APPDATA%\Obsidian\plugins\opsto-mp\`
+   - macOS: `~/Library/Application Support/Obsidian/Plugins/opsto-mp/`
+   - Linux: `~/.config/obsidian/plugins/opsto-mp/`
 3. 在Obsidian中启用插件：设置 → 社区插件 → OpsToMP → 启用 / Enable plugin in Obsidian: Settings → Community Plugins → OpsToMP → Enable
 
 #### 方法2：从源码构建 / Method 2: Build from Source
@@ -107,22 +101,6 @@ npm install
 npm run build
 
 # 将build目录下的文件复制到Obsidian插件目录 / Copy files from build directory to Obsidian plugins directory
-```
-
-### Python工具安装 / Python Tools Installation
-
-```bash
-# 安装Python依赖 / Install Python dependencies
-pip install requests markdown beautifulsoup4
-
-# 进入Python工具目录 / Enter Python tools directory
-cd py工具
-
-# 测试Token / Test Token
-python test_token.py
-
-# 转换Markdown文件 / Convert Markdown file
-python obsidian_to_mp.py test_note.md
 ```
 
 ---
@@ -144,14 +122,7 @@ python obsidian_to_mp.py test_note.md
    - **AppSecret**：微信公众号的AppSecret / WeChat Official Account AppSecret
    - **网络测试URL**：默认为百度，可自定义 / Network test URL, default is Baidu, customizable
    - **超时时间**：网络请求超时时间（毫秒）/ Network request timeout (milliseconds)
-
-### Python工具配置 / Python Tools Configuration
-
-编辑`obsidian_to_mp.py`或直接在命令行中指定参数 / Edit `obsidian_to_mp.py` or specify parameters directly in command line:
-
-```bash
-python obsidian_to_mp.py --appid YOUR_APPID --secret YOUR_SECRET your_note.md
-```
+   - **默认主题**：选择默认的微信公众号样式主题 / Select default WeChat Official Account style theme
 
 ---
 
@@ -226,36 +197,7 @@ python obsidian_to_mp.py --appid YOUR_APPID --secret YOUR_SECRET your_note.md
 
 **注意**：内容管理功能需要公众号完成个人认证。如果出现权限错误，请前往微信公众平台完成认证。/ **Note**: Content management features require WeChat Official Account personal authentication. If permission errors occur, please complete authentication on the WeChat Official Account Platform.
 
-### Python工具使用 / Python Tools Usage
 
-#### 测试Token / Test Token
-
-```bash
-python test_token.py
-```
-
-按照提示输入AppID和AppSecret，工具会自动测试Token的有效性 / Follow the prompts to enter AppID and AppSecret, the tool will automatically test Token validity.
-
-#### 转换Markdown文件 / Convert Markdown File
-
-```bash
-python obsidian_to_mp.py your_note.md
-```
-
-工具会自动 / The tool will automatically:
-1. 读取Markdown文件 / Read Markdown file
-2. 转换为HTML格式 / Convert to HTML format
-3. 上传本地图片到微信服务器 / Upload local images to WeChat server
-4. 发布到微信公众号草稿箱 / Publish to WeChat Official Account drafts
-
-#### 批量处理 / Batch Processing
-
-```bash
-# 处理多个文件 / Process multiple files
-for file in *.md; do
-    python obsidian_to_mp.py "$file"
-done
-```
 
 ---
 
@@ -284,13 +226,6 @@ done
 - **HTTP客户端**：axios / **HTTP Client**: axios
 - **表单处理**：form-data / **Form Processing**: form-data
 - **Node.js版本**：>= 16 / **Node.js Version**: >= 16
-
-### Python工具技术栈 / Python Tools Tech Stack
-
-- **HTTP库**：requests / **HTTP Library**: requests
-- **Markdown解析**：markdown / **Markdown Parser**: markdown
-- **HTML解析**：BeautifulSoup4 / **HTML Parser**: BeautifulSoup4
-- **Python版本**：>= 3.6 / **Python Version**: >= 3.6
 
 ### 安全特性 / Security Features
 
@@ -343,32 +278,16 @@ npm run build
 npm run version
 ```
 
-#### 项目结构说明 / Project Structure
+#### 代码结构说明 / Project Structure
 
+- `src/api.js`：微信公众号API封装 / WeChat Official Account API wrapper
 - `src/main.js`：插件主文件，包含所有核心功能 / Plugin main file, contains all core functionality
+- `src/settings.js`：设置页面实现 / Settings page implementation
+- `src/sidebar.js`：侧边栏视图实现 / Sidebar view implementation
 - `src/styles.css`：插件样式文件 / Plugin styles file
+- `src/utils.js`：工具函数集合 / Utility functions collection
 - `esbuild.config.mjs`：esbuild构建配置 / esbuild configuration
 - `manifest.json`：插件清单文件 / Plugin manifest file
-
-### Python工具开发 / Python Tools Development
-
-#### 环境要求 / Environment Requirements
-
-- Python >= 3.6
-- pip
-
-#### 安装依赖 / Install Dependencies
-
-```bash
-cd py工具
-pip install -r requirements.txt
-```
-
-#### 代码结构 / Code Structure
-
-- `app.py`：微信公众号API封装 / WeChat Official Account API wrapper
-- `obsidian_to_mp.py`：主转换工具 / Main conversion tool
-- `test_token.py`：Token测试工具 / Token testing tool
 
 ---
 
@@ -405,29 +324,7 @@ A: 请检查 / Please check:
 2. 是否使用了不支持的语法 / Whether unsupported syntax is used
 3. 查看控制台日志获取详细错误信息 / Check console logs for detailed error information
 
-### Python工具相关 / Python Tools Related
 
-**Q: Python工具无法运行？ / Python tools cannot run?**
-
-A: 请检查 / Please check:
-1. Python版本是否 >= 3.6 / Whether Python version is >= 3.6
-2. 是否安装了所有依赖（requests、markdown、beautifulsoup4）/ Whether all dependencies are installed (requests, markdown, beautifulsoup4)
-3. 使用`pip list`查看已安装的包 / Use `pip list` to view installed packages
-
-**Q: Token获取失败？ / Token acquisition failed?**
-
-A: 请检查 / Please check:
-1. AppID和AppSecret是否正确 / Whether AppID and AppSecret are correct
-2. 网络连接是否正常 / Whether network connection is normal
-3. 微信公众号是否已开通相关权限 / Whether WeChat Official Account has relevant permissions
-
-**Q: 图片上传失败？ / Image upload failed?**
-
-A: 请检查 / Please check:
-1. 图片路径是否正确 / Whether image path is correct
-2. 图片格式是否支持 / Whether image format is supported
-3. 图片大小是否超过限制 / Whether image size exceeds limit
-4. 网络连接是否正常 / Whether network connection is normal
 
 ---
 
@@ -452,6 +349,23 @@ A: 请检查 / Please check:
   - 删除已发布文章 / Delete published articles
 - 🐛 修复内容管理权限错误提示 / Fix content management permission error message
   - 添加个人认证说明 / Add personal authentication explanation
+- 🐛 修复图片处理问题 / Fix image processing issues
+  - 修复`file:///` URL处理 / Fix `file:///` URL handling
+  - 修复Obsidian内部图片链接转换 / Fix Obsidian internal image link conversion
+  - 确保图片正确显示，避免`!image`变为`:image`的问题 / Ensure correct image display, avoid `!image` becoming `:image` issue
+- 🐛 修复内容处理顺序 / Fix content processing order
+  - 调整处理流程，确保内部链接和微信链接清理在HTML渲染前完成 / Adjust processing flow to ensure internal links and WeChat link cleaning are completed before HTML rendering
+- 🐛 修复预览截断问题 / Fix preview truncation issue
+  - 添加内联代码处理 / Add inline code handling
+  - 确保完整内容渲染 / Ensure complete content rendering
+- 🐛 修复微信链接处理 / Fix WeChat link processing
+  - 添加`cleanWeChatLinks`函数，替换微信公众平台链接 / Add `cleanWeChatLinks` function to replace WeChat Official Account links
+  - 避免微信公众号检测到违规链接 / Avoid WeChat Official Account detecting forbidden links
+- 🔧 优化HTML清理 / Optimize HTML cleaning
+  - 移除问题HTML解码，确保内容正确处理 / Remove problematic HTML decoding, ensure correct content handling
+- 📝 支持README文件上传 / Support README file upload
+  - 修复"无效内容"错误 / Fix "invalid content" error
+  - 移除内部图片和简化列表，确保上传成功 / Remove internal images and simplify lists to ensure upload success
 
 #### Python工具 / Python Tools
 
