@@ -17,6 +17,13 @@ export class PublisherSidebarView extends ItemView {
       totalItems: 0,
       totalPages: 0
     };
+    this.publishedPage = {
+      currentPage: 0,
+      pageSize: 5,
+      totalItems: 0,
+      totalPages: 0
+    };
+    this.publishedArticles = [];
   }
 
   getViewType() {
@@ -183,6 +190,15 @@ export class PublisherSidebarView extends ItemView {
     draftListButton.addEventListener('click', async () => {
       this.draftPage.currentPage = 0;
       await this.loadDraftList();
+    });
+
+    const contentManageButton = container.createEl('button', { text: '内容管理' });
+    contentManageButton.style.width = '100%';
+    contentManageButton.style.marginBottom = '10px';
+    contentManageButton.style.padding = '8px';
+    contentManageButton.addEventListener('click', async () => {
+      this.publishedPage.currentPage = 0;
+      await this.loadPublishedArticles();
     });
 
     const networkTestSection = container.createEl('div');
@@ -418,6 +434,176 @@ export class PublisherSidebarView extends ItemView {
       retryButton.style.margin = '10px auto';
       retryButton.addEventListener('click', () => {
         this.loadDraftList();
+      });
+    }
+  }
+
+  async loadPublishedArticles() {
+    this.currentView = 'published';
+    const container = this.contentEl;
+    container.empty();
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.height = '100%';
+
+    const header = container.createEl('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.marginBottom = '15px';
+    header.style.flexShrink = '0';
+
+    const titleEl = header.createEl('h2', { text: '已发布文章' });
+    titleEl.style.margin = '0';
+
+    const backButton = header.createEl('button', { text: '← 返回' });
+    backButton.style.padding = '4px 8px';
+    backButton.addEventListener('click', () => {
+      this.renderMainView();
+    });
+
+    const loadingEl = container.createEl('div', { text: '正在加载已发布文章...' });
+    loadingEl.style.textAlign = 'center';
+    loadingEl.style.padding = '20px';
+    loadingEl.style.color = 'var(--text-muted)';
+
+    try {
+      const accessToken = await this.plugin.api.getAccessToken();
+      const offset = this.publishedPage.currentPage * this.publishedPage.pageSize;
+      const result = await this.plugin.api.getPublishedArticles(accessToken, offset, this.publishedPage.pageSize);
+      
+      this.publishedArticles = result.item || [];
+      this.publishedPage.totalItems = result.total_count || 0;
+      this.publishedPage.totalPages = Math.ceil(this.publishedPage.totalItems / this.publishedPage.pageSize);
+      
+      loadingEl.remove();
+
+      if (this.publishedArticles.length === 0) {
+        const emptyEl = container.createEl('div', { text: '暂无已发布文章' });
+        emptyEl.style.textAlign = 'center';
+        emptyEl.style.padding = '20px';
+        emptyEl.style.color = 'var(--text-muted)';
+        
+        if (this.publishedPage.currentPage > 0) {
+          const backToFirstButton = container.createEl('button', { text: '返回第一页' });
+          backToFirstButton.style.display = 'block';
+          backToFirstButton.style.margin = '10px auto';
+          backToFirstButton.addEventListener('click', () => {
+            this.publishedPage.currentPage = 0;
+            this.loadPublishedArticles();
+          });
+        }
+        return;
+      }
+
+      const listContainer = container.createEl('div');
+      listContainer.style.flex = '1';
+      listContainer.style.overflowY = 'auto';
+      listContainer.style.minHeight = '0';
+
+      this.publishedArticles.forEach((articleGroup) => {
+        const article = articleGroup.content.news_item[0];
+        const articleId = articleGroup.article_id;
+        
+        const articleItem = listContainer.createEl('div');
+        articleItem.style.border = '1px solid var(--background-modifier-border)';
+        articleItem.style.borderRadius = '4px';
+        articleItem.style.padding = '10px';
+        articleItem.style.marginBottom = '8px';
+        articleItem.style.backgroundColor = 'var(--background-secondary)';
+
+        const articleTitle = articleItem.createEl('h4', { text: article.title });
+        articleTitle.style.margin = '0 0 6px 0';
+        articleTitle.style.fontSize = '13px';
+        articleTitle.style.fontWeight = '600';
+        articleTitle.style.lineHeight = '1.4';
+
+        const articleMeta = articleItem.createEl('div');
+        articleMeta.style.fontSize = '11px';
+        articleMeta.style.color = 'var(--text-muted)';
+        articleMeta.style.marginBottom = '6px';
+        articleMeta.textContent = `ID: ${articleId}`;
+
+        const actions = articleItem.createEl('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '6px';
+
+        const deleteButton = actions.createEl('button', { text: '删除' });
+        deleteButton.style.flex = '1';
+        deleteButton.style.padding = '3px 6px';
+        deleteButton.style.fontSize = '11px';
+        deleteButton.style.backgroundColor = 'var(--interactive-danger)';
+        deleteButton.style.color = 'var(--text-on-accent)';
+        deleteButton.addEventListener('click', async () => {
+          if (confirm(`确定要删除已发布文章"${article.title}"吗？此操作不可恢复！`)) {
+            try {
+              await this.plugin.api.deletePublishedArticle(accessToken, articleId);
+              new Notice('删除成功', 3000);
+              this.publishedPage.currentPage = 0;
+              await this.loadPublishedArticles();
+            } catch (error) {
+              new Notice(`删除失败: ${error.message}`, 5000);
+            }
+          }
+        });
+      });
+
+      const paginationContainer = container.createEl('div');
+      paginationContainer.style.marginTop = '10px';
+      paginationContainer.style.paddingTop = '10px';
+      paginationContainer.style.borderTop = '1px solid var(--background-modifier-border)';
+      paginationContainer.style.flexShrink = '0';
+      
+      const pageInfo = paginationContainer.createEl('div');
+      pageInfo.style.textAlign = 'center';
+      pageInfo.style.fontSize = '12px';
+      pageInfo.style.color = 'var(--text-muted)';
+      pageInfo.style.marginBottom = '8px';
+      pageInfo.textContent = `第 ${this.publishedPage.currentPage + 1} / ${this.publishedPage.totalPages} 页，共 ${this.publishedPage.totalItems} 篇文章`;
+      
+      const paginationButtons = paginationContainer.createEl('div');
+      paginationButtons.style.display = 'flex';
+      paginationButtons.style.justifyContent = 'center';
+      paginationButtons.style.gap = '8px';
+      
+      const prevButton = paginationButtons.createEl('button', { text: '上一页' });
+      prevButton.style.flex = '1';
+      prevButton.style.padding = '5px 10px';
+      prevButton.style.fontSize = '12px';
+      prevButton.disabled = this.publishedPage.currentPage === 0;
+      prevButton.style.opacity = this.publishedPage.currentPage === 0 ? '0.5' : '1';
+      prevButton.addEventListener('click', () => {
+        if (this.publishedPage.currentPage > 0) {
+          this.publishedPage.currentPage--;
+          this.loadPublishedArticles();
+        }
+      });
+      
+      const nextButton = paginationButtons.createEl('button', { text: '下一页' });
+      nextButton.style.flex = '1';
+      nextButton.style.padding = '5px 10px';
+      nextButton.style.fontSize = '12px';
+      nextButton.disabled = this.publishedPage.currentPage >= this.publishedPage.totalPages - 1;
+      nextButton.style.opacity = this.publishedPage.currentPage >= this.publishedPage.totalPages - 1 ? '0.5' : '1';
+      nextButton.addEventListener('click', () => {
+        if (this.publishedPage.currentPage < this.publishedPage.totalPages - 1) {
+          this.publishedPage.currentPage++;
+          this.loadPublishedArticles();
+        }
+      });
+
+    } catch (error) {
+      loadingEl.remove();
+      const errorEl = container.createEl('div', { text: `加载失败: ${error.message}` });
+      errorEl.style.textAlign = 'center';
+      errorEl.style.padding = '20px';
+      errorEl.style.color = 'var(--text-error)';
+      
+      const retryButton = container.createEl('button', { text: '重试' });
+      retryButton.style.display = 'block';
+      retryButton.style.margin = '10px auto';
+      retryButton.addEventListener('click', () => {
+        this.loadPublishedArticles();
       });
     }
   }

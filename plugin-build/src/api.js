@@ -293,10 +293,12 @@ export class WeChatMPAPI {
           let responseData = '';
           res.on('data', (chunk) => { responseData += chunk; });
           res.on('end', () => {
+            console.log('获取已发布文章原始响应:', responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error('解析JSON失败，原始数据:', responseData);
               reject(new Error('解析响应失败'));
             }
           });
@@ -348,10 +350,12 @@ export class WeChatMPAPI {
           let responseData = '';
           res.on('data', (chunk) => { responseData += chunk; });
           res.on('end', () => {
+            console.log('获取已发布文章原始响应:', responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error('解析JSON失败，原始数据:', responseData);
               reject(new Error('解析响应失败'));
             }
           });
@@ -405,10 +409,12 @@ export class WeChatMPAPI {
           let responseData = '';
           res.on('data', (chunk) => { responseData += chunk; });
           res.on('end', () => {
+            console.log('获取已发布文章原始响应:', responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error('解析JSON失败，原始数据:', responseData);
               reject(new Error('解析响应失败'));
             }
           });
@@ -460,10 +466,12 @@ export class WeChatMPAPI {
           let responseData = '';
           res.on('data', (chunk) => { responseData += chunk; });
           res.on('end', () => {
+            console.log('获取已发布文章原始响应:', responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error('解析JSON失败，原始数据:', responseData);
               reject(new Error('解析响应失败'));
             }
           });
@@ -487,6 +495,123 @@ export class WeChatMPAPI {
       
     } catch (error) {
       console.error('删除草稿错误:', error);
+      throw error;
+    }
+  }
+
+  async getPublishedArticles(accessToken, offset = 0, count = 20) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/freepublish/batchget?access_token=${accessToken}`;
+      
+      const data = JSON.stringify({
+        offset: offset,
+        count: count,
+        no_content: 0
+      });
+      
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: 'POST',
+          hostname: 'api.weixin.qq.com',
+          path: `/cgi-bin/freepublish/batchget?access_token=${accessToken}`,
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        
+        const req = https.request(options, (res) => {
+          let responseData = '';
+          res.on('data', (chunk) => { responseData += chunk; });
+          res.on('end', () => {
+            console.log('获取已发布文章原始响应:', responseData);
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              console.error('解析JSON失败，原始数据:', responseData);
+              reject(new Error('解析响应失败'));
+            }
+          });
+        });
+        
+        req.on('error', (err) => reject(err));
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('请求超时'));
+        });
+        
+        req.write(data);
+        req.end();
+      });
+      
+      if (response.errcode) {
+        if (response.errcode === 48001) {
+          throw new Error('公众号未授权使用此接口。请前往微信公众平台（公众平台官网 - 开发者中心）开启"发布能力"相关权限。');
+        }
+        throw new Error(`获取已发布文章失败: ${response.errmsg}`);
+      }
+      
+      return response;
+      
+    } catch (error) {
+      console.error('获取已发布文章错误:', error);
+      throw error;
+    }
+  }
+
+  async deletePublishedArticle(accessToken, articleId) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/freepublish/delete?access_token=${accessToken}`;
+      
+      const data = JSON.stringify({
+        article_id: articleId
+      });
+      
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: 'POST',
+          hostname: 'api.weixin.qq.com',
+          path: `/cgi-bin/freepublish/delete?access_token=${accessToken}`,
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        
+        const req = https.request(options, (res) => {
+          let responseData = '';
+          res.on('data', (chunk) => { responseData += chunk; });
+          res.on('end', () => {
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              reject(new Error('解析响应失败'));
+            }
+          });
+        });
+        
+        req.on('error', (err) => reject(err));
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('请求超时'));
+        });
+        
+        req.write(data);
+        req.end();
+      });
+      
+      if (response.errcode) {
+        throw new Error(`删除已发布文章失败: ${response.errmsg}`);
+      }
+      
+      return response;
+      
+    } catch (error) {
+      console.error('删除已发布文章错误:', error);
       throw error;
     }
   }

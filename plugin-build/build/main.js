@@ -293,10 +293,12 @@ var WeChatMPAPI = class {
             responseData += chunk;
           });
           res.on("end", () => {
+            console.log("\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u539F\u59CB\u54CD\u5E94:", responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error("\u89E3\u6790JSON\u5931\u8D25\uFF0C\u539F\u59CB\u6570\u636E:", responseData);
               reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
             }
           });
@@ -341,10 +343,12 @@ var WeChatMPAPI = class {
             responseData += chunk;
           });
           res.on("end", () => {
+            console.log("\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u539F\u59CB\u54CD\u5E94:", responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error("\u89E3\u6790JSON\u5931\u8D25\uFF0C\u539F\u59CB\u6570\u636E:", responseData);
               reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
             }
           });
@@ -391,10 +395,12 @@ var WeChatMPAPI = class {
             responseData += chunk;
           });
           res.on("end", () => {
+            console.log("\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u539F\u59CB\u54CD\u5E94:", responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error("\u89E3\u6790JSON\u5931\u8D25\uFF0C\u539F\u59CB\u6570\u636E:", responseData);
               reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
             }
           });
@@ -439,10 +445,12 @@ var WeChatMPAPI = class {
             responseData += chunk;
           });
           res.on("end", () => {
+            console.log("\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u539F\u59CB\u54CD\u5E94:", responseData);
             try {
               const result = JSON.parse(responseData);
               resolve(result);
             } catch (err) {
+              console.error("\u89E3\u6790JSON\u5931\u8D25\uFF0C\u539F\u59CB\u6570\u636E:", responseData);
               reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
             }
           });
@@ -461,6 +469,109 @@ var WeChatMPAPI = class {
       return response;
     } catch (error) {
       console.error("\u5220\u9664\u8349\u7A3F\u9519\u8BEF:", error);
+      throw error;
+    }
+  }
+  async getPublishedArticles(accessToken, offset = 0, count = 20) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/freepublish/batchget?access_token=${accessToken}`;
+      const data = JSON.stringify({
+        offset,
+        count,
+        no_content: 0
+      });
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: "POST",
+          hostname: "api.weixin.qq.com",
+          path: `/cgi-bin/freepublish/batchget?access_token=${accessToken}`,
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        const req = import_https.default.request(options, (res) => {
+          let responseData = "";
+          res.on("data", (chunk) => {
+            responseData += chunk;
+          });
+          res.on("end", () => {
+            console.log("\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u539F\u59CB\u54CD\u5E94:", responseData);
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              console.error("\u89E3\u6790JSON\u5931\u8D25\uFF0C\u539F\u59CB\u6570\u636E:", responseData);
+              reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
+            }
+          });
+        });
+        req.on("error", (err) => reject(err));
+        req.on("timeout", () => {
+          req.destroy();
+          reject(new Error("\u8BF7\u6C42\u8D85\u65F6"));
+        });
+        req.write(data);
+        req.end();
+      });
+      if (response.errcode) {
+        if (response.errcode === 48001) {
+          throw new Error('\u516C\u4F17\u53F7\u672A\u6388\u6743\u4F7F\u7528\u6B64\u63A5\u53E3\u3002\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u5E73\u53F0\uFF08\u516C\u4F17\u5E73\u53F0\u5B98\u7F51 - \u5F00\u53D1\u8005\u4E2D\u5FC3\uFF09\u5F00\u542F"\u53D1\u5E03\u80FD\u529B"\u76F8\u5173\u6743\u9650\u3002');
+        }
+        throw new Error(`\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u5931\u8D25: ${response.errmsg}`);
+      }
+      return response;
+    } catch (error) {
+      console.error("\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u9519\u8BEF:", error);
+      throw error;
+    }
+  }
+  async deletePublishedArticle(accessToken, articleId) {
+    try {
+      const url = `https://api.weixin.qq.com/cgi-bin/freepublish/delete?access_token=${accessToken}`;
+      const data = JSON.stringify({
+        article_id: articleId
+      });
+      const response = await new Promise((resolve, reject) => {
+        const options = {
+          method: "POST",
+          hostname: "api.weixin.qq.com",
+          path: `/cgi-bin/freepublish/delete?access_token=${accessToken}`,
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(data)
+          },
+          timeout: this.settings.timeout
+        };
+        const req = import_https.default.request(options, (res) => {
+          let responseData = "";
+          res.on("data", (chunk) => {
+            responseData += chunk;
+          });
+          res.on("end", () => {
+            try {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } catch (err) {
+              reject(new Error("\u89E3\u6790\u54CD\u5E94\u5931\u8D25"));
+            }
+          });
+        });
+        req.on("error", (err) => reject(err));
+        req.on("timeout", () => {
+          req.destroy();
+          reject(new Error("\u8BF7\u6C42\u8D85\u65F6"));
+        });
+        req.write(data);
+        req.end();
+      });
+      if (response.errcode) {
+        throw new Error(`\u5220\u9664\u5DF2\u53D1\u5E03\u6587\u7AE0\u5931\u8D25: ${response.errmsg}`);
+      }
+      return response;
+    } catch (error) {
+      console.error("\u5220\u9664\u5DF2\u53D1\u5E03\u6587\u7AE0\u9519\u8BEF:", error);
       throw error;
     }
   }
@@ -1027,6 +1138,13 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
       totalItems: 0,
       totalPages: 0
     };
+    this.publishedPage = {
+      currentPage: 0,
+      pageSize: 5,
+      totalItems: 0,
+      totalPages: 0
+    };
+    this.publishedArticles = [];
   }
   getViewType() {
     return "wechat-mp-publisher-sidebar";
@@ -1168,6 +1286,14 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
     draftListButton.addEventListener("click", async () => {
       this.draftPage.currentPage = 0;
       await this.loadDraftList();
+    });
+    const contentManageButton = container.createEl("button", { text: "\u5185\u5BB9\u7BA1\u7406" });
+    contentManageButton.style.width = "100%";
+    contentManageButton.style.marginBottom = "10px";
+    contentManageButton.style.padding = "8px";
+    contentManageButton.addEventListener("click", async () => {
+      this.publishedPage.currentPage = 0;
+      await this.loadPublishedArticles();
     });
     const networkTestSection = container.createEl("div");
     networkTestSection.style.marginBottom = "15px";
@@ -1370,6 +1496,152 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
       retryButton.style.margin = "10px auto";
       retryButton.addEventListener("click", () => {
         this.loadDraftList();
+      });
+    }
+  }
+  async loadPublishedArticles() {
+    this.currentView = "published";
+    const container = this.contentEl;
+    container.empty();
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.height = "100%";
+    const header = container.createEl("div");
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.style.marginBottom = "15px";
+    header.style.flexShrink = "0";
+    const titleEl = header.createEl("h2", { text: "\u5DF2\u53D1\u5E03\u6587\u7AE0" });
+    titleEl.style.margin = "0";
+    const backButton = header.createEl("button", { text: "\u2190 \u8FD4\u56DE" });
+    backButton.style.padding = "4px 8px";
+    backButton.addEventListener("click", () => {
+      this.renderMainView();
+    });
+    const loadingEl = container.createEl("div", { text: "\u6B63\u5728\u52A0\u8F7D\u5DF2\u53D1\u5E03\u6587\u7AE0..." });
+    loadingEl.style.textAlign = "center";
+    loadingEl.style.padding = "20px";
+    loadingEl.style.color = "var(--text-muted)";
+    try {
+      const accessToken = await this.plugin.api.getAccessToken();
+      const offset = this.publishedPage.currentPage * this.publishedPage.pageSize;
+      const result = await this.plugin.api.getPublishedArticles(accessToken, offset, this.publishedPage.pageSize);
+      this.publishedArticles = result.item || [];
+      this.publishedPage.totalItems = result.total_count || 0;
+      this.publishedPage.totalPages = Math.ceil(this.publishedPage.totalItems / this.publishedPage.pageSize);
+      loadingEl.remove();
+      if (this.publishedArticles.length === 0) {
+        const emptyEl = container.createEl("div", { text: "\u6682\u65E0\u5DF2\u53D1\u5E03\u6587\u7AE0" });
+        emptyEl.style.textAlign = "center";
+        emptyEl.style.padding = "20px";
+        emptyEl.style.color = "var(--text-muted)";
+        if (this.publishedPage.currentPage > 0) {
+          const backToFirstButton = container.createEl("button", { text: "\u8FD4\u56DE\u7B2C\u4E00\u9875" });
+          backToFirstButton.style.display = "block";
+          backToFirstButton.style.margin = "10px auto";
+          backToFirstButton.addEventListener("click", () => {
+            this.publishedPage.currentPage = 0;
+            this.loadPublishedArticles();
+          });
+        }
+        return;
+      }
+      const listContainer = container.createEl("div");
+      listContainer.style.flex = "1";
+      listContainer.style.overflowY = "auto";
+      listContainer.style.minHeight = "0";
+      this.publishedArticles.forEach((articleGroup) => {
+        const article = articleGroup.content.news_item[0];
+        const articleId = articleGroup.article_id;
+        const articleItem = listContainer.createEl("div");
+        articleItem.style.border = "1px solid var(--background-modifier-border)";
+        articleItem.style.borderRadius = "4px";
+        articleItem.style.padding = "10px";
+        articleItem.style.marginBottom = "8px";
+        articleItem.style.backgroundColor = "var(--background-secondary)";
+        const articleTitle = articleItem.createEl("h4", { text: article.title });
+        articleTitle.style.margin = "0 0 6px 0";
+        articleTitle.style.fontSize = "13px";
+        articleTitle.style.fontWeight = "600";
+        articleTitle.style.lineHeight = "1.4";
+        const articleMeta = articleItem.createEl("div");
+        articleMeta.style.fontSize = "11px";
+        articleMeta.style.color = "var(--text-muted)";
+        articleMeta.style.marginBottom = "6px";
+        articleMeta.textContent = `ID: ${articleId}`;
+        const actions = articleItem.createEl("div");
+        actions.style.display = "flex";
+        actions.style.gap = "6px";
+        const deleteButton = actions.createEl("button", { text: "\u5220\u9664" });
+        deleteButton.style.flex = "1";
+        deleteButton.style.padding = "3px 6px";
+        deleteButton.style.fontSize = "11px";
+        deleteButton.style.backgroundColor = "var(--interactive-danger)";
+        deleteButton.style.color = "var(--text-on-accent)";
+        deleteButton.addEventListener("click", async () => {
+          if (confirm(`\u786E\u5B9A\u8981\u5220\u9664\u5DF2\u53D1\u5E03\u6587\u7AE0"${article.title}"\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\uFF01`)) {
+            try {
+              await this.plugin.api.deletePublishedArticle(accessToken, articleId);
+              new import_obsidian2.Notice("\u5220\u9664\u6210\u529F", 3e3);
+              this.publishedPage.currentPage = 0;
+              await this.loadPublishedArticles();
+            } catch (error) {
+              new import_obsidian2.Notice(`\u5220\u9664\u5931\u8D25: ${error.message}`, 5e3);
+            }
+          }
+        });
+      });
+      const paginationContainer = container.createEl("div");
+      paginationContainer.style.marginTop = "10px";
+      paginationContainer.style.paddingTop = "10px";
+      paginationContainer.style.borderTop = "1px solid var(--background-modifier-border)";
+      paginationContainer.style.flexShrink = "0";
+      const pageInfo = paginationContainer.createEl("div");
+      pageInfo.style.textAlign = "center";
+      pageInfo.style.fontSize = "12px";
+      pageInfo.style.color = "var(--text-muted)";
+      pageInfo.style.marginBottom = "8px";
+      pageInfo.textContent = `\u7B2C ${this.publishedPage.currentPage + 1} / ${this.publishedPage.totalPages} \u9875\uFF0C\u5171 ${this.publishedPage.totalItems} \u7BC7\u6587\u7AE0`;
+      const paginationButtons = paginationContainer.createEl("div");
+      paginationButtons.style.display = "flex";
+      paginationButtons.style.justifyContent = "center";
+      paginationButtons.style.gap = "8px";
+      const prevButton = paginationButtons.createEl("button", { text: "\u4E0A\u4E00\u9875" });
+      prevButton.style.flex = "1";
+      prevButton.style.padding = "5px 10px";
+      prevButton.style.fontSize = "12px";
+      prevButton.disabled = this.publishedPage.currentPage === 0;
+      prevButton.style.opacity = this.publishedPage.currentPage === 0 ? "0.5" : "1";
+      prevButton.addEventListener("click", () => {
+        if (this.publishedPage.currentPage > 0) {
+          this.publishedPage.currentPage--;
+          this.loadPublishedArticles();
+        }
+      });
+      const nextButton = paginationButtons.createEl("button", { text: "\u4E0B\u4E00\u9875" });
+      nextButton.style.flex = "1";
+      nextButton.style.padding = "5px 10px";
+      nextButton.style.fontSize = "12px";
+      nextButton.disabled = this.publishedPage.currentPage >= this.publishedPage.totalPages - 1;
+      nextButton.style.opacity = this.publishedPage.currentPage >= this.publishedPage.totalPages - 1 ? "0.5" : "1";
+      nextButton.addEventListener("click", () => {
+        if (this.publishedPage.currentPage < this.publishedPage.totalPages - 1) {
+          this.publishedPage.currentPage++;
+          this.loadPublishedArticles();
+        }
+      });
+    } catch (error) {
+      loadingEl.remove();
+      const errorEl = container.createEl("div", { text: `\u52A0\u8F7D\u5931\u8D25: ${error.message}` });
+      errorEl.style.textAlign = "center";
+      errorEl.style.padding = "20px";
+      errorEl.style.color = "var(--text-error)";
+      const retryButton = container.createEl("button", { text: "\u91CD\u8BD5" });
+      retryButton.style.display = "block";
+      retryButton.style.margin = "10px auto";
+      retryButton.addEventListener("click", () => {
+        this.loadPublishedArticles();
       });
     }
   }
