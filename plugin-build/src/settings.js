@@ -1,4 +1,5 @@
 import { PluginSettingTab, Setting, Notice } from 'obsidian';
+import { themes } from './utils.js';
 
 export class NetworkTestSettingsTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -53,6 +54,23 @@ export class NetworkTestSettingsTab extends PluginSettingTab {
           } else {
             new Notice('请输入有效的超时时间', 2000);
           }
+        }));
+
+    containerEl.createEl('h3', { text: '主题设置' });
+
+    new Setting(containerEl)
+      .setName('默认预览主题')
+      .setDesc('选择预览时使用的默认主题')
+      .addDropdown(dropdown => dropdown
+        .addOptions(Object.keys(themes).reduce((acc, key) => {
+          acc[key] = themes[key].name;
+          return acc;
+        }, {}))
+        .setValue(this.plugin.settings.defaultTheme || 'default')
+        .onChange(async (value) => {
+          this.plugin.settings.defaultTheme = value;
+          await this.plugin.saveSettings();
+          new Notice(`已设置默认主题为${themes[value].name}`, 2000);
         }));
   }
 }

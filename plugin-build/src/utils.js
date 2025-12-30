@@ -141,6 +141,142 @@ export function sanitizeHtml(html) {
   return tempDiv.innerHTML;
 }
 
+export const themes = {
+  default: {
+    name: '默认',
+    primary: '#07C160',
+    background: '#ffffff',
+    text: '#333333',
+    secondary: '#f5f5f5',
+    border: '#e0e0e0',
+    link: '#1AAD19',
+    linkHover: 'rgba(26, 173, 25, 0.1)'
+  },
+  simple: {
+    name: '简约',
+    primary: '#333333',
+    background: '#f5f5f5',
+    text: '#666666',
+    secondary: '#e8e8e8',
+    border: '#d0d0d0',
+    link: '#333333',
+    linkHover: 'rgba(51, 51, 51, 0.1)'
+  },
+  elegant: {
+    name: '优雅',
+    primary: '#8B4513',
+    background: '#FFF8DC',
+    text: '#2F4F4F',
+    secondary: '#F5DEB3',
+    border: '#DEB887',
+    link: '#8B4513',
+    linkHover: 'rgba(139, 69, 19, 0.1)'
+  },
+  tech: {
+    name: '科技',
+    primary: '#00BFFF',
+    background: '#1a1a2e',
+    text: '#e0e0e0',
+    secondary: '#2d2d44',
+    border: '#3d3d5c',
+    link: '#00BFFF',
+    linkHover: 'rgba(0, 191, 255, 0.1)'
+  },
+  warm: {
+    name: '温暖',
+    primary: '#FF6B6B',
+    background: '#FFF5EE',
+    text: '#4A4A4A',
+    secondary: '#FFE4E1',
+    border: '#FFD4D6',
+    link: '#FF6B6B',
+    linkHover: 'rgba(255, 107, 107, 0.1)'
+  },
+  fresh: {
+    name: '清新',
+    primary: '#4ECDC4',
+    background: '#F0FFF4',
+    text: '#2D5A27',
+    secondary: '#CBF3F0',
+    border: '#95E1D3',
+    link: '#4ECDC4',
+    linkHover: 'rgba(78, 205, 196, 0.1)'
+  },
+  business: {
+    name: '商务',
+    primary: '#1E3A8A',
+    background: '#F8F9FA',
+    text: '#2C3E50',
+    secondary: '#E8ECF1',
+    border: '#BDC3C7',
+    link: '#1E3A8A',
+    linkHover: 'rgba(30, 58, 138, 0.1)'
+  }
+};
+
+export function applyTheme(container, themeName) {
+  const theme = themes[themeName] || themes.default;
+  
+  container.style.backgroundColor = theme.background;
+  container.style.color = theme.text;
+  
+  const title = container.querySelector('h1');
+  if (title) {
+    title.style.color = theme.text;
+  }
+  
+  const paragraphs = container.querySelectorAll('p');
+  paragraphs.forEach(p => {
+    p.style.color = theme.text;
+  });
+  
+  const headings = container.querySelectorAll('h1, h2, h3, h4');
+  headings.forEach(h => {
+    h.style.color = theme.text;
+    h.style.borderBottomColor = theme.border;
+  });
+  
+  const links = container.querySelectorAll('a');
+  links.forEach(a => {
+    a.style.color = theme.link;
+    a.style.borderBottomColor = theme.linkHover;
+  });
+  
+  const blockquotes = container.querySelectorAll('blockquote');
+  blockquotes.forEach(quote => {
+    quote.style.borderLeftColor = theme.primary;
+    quote.style.backgroundColor = theme.secondary;
+  });
+  
+  const tables = container.querySelectorAll('table');
+  tables.forEach(table => {
+    table.style.borderColor = theme.border;
+  });
+  
+  const tableHeaders = container.querySelectorAll('th');
+  tableHeaders.forEach(th => {
+    th.style.backgroundColor = theme.secondary;
+    th.style.color = theme.text;
+  });
+  
+  const images = container.querySelectorAll('img');
+  images.forEach(img => {
+    img.style.backgroundColor = theme.background;
+    img.style.borderColor = theme.border;
+  });
+  
+  const codes = container.querySelectorAll('pre, code');
+  codes.forEach(code => {
+    code.style.backgroundColor = theme.secondary;
+    code.style.borderColor = theme.border;
+  });
+  
+  const hr = container.querySelectorAll('hr');
+  hr.forEach(line => {
+    line.style.borderTopColor = theme.border;
+  });
+}
+
 export function processInternalLinks(htmlContent) {
   const internalImageRegex = /!\[\[(.*?)\]\]/g;
   

@@ -4,7 +4,7 @@ import http from 'http';
 import { WeChatMPAPI } from './api.js';
 import { PublisherSidebarView } from './sidebar.js';
 import { NetworkTestSettingsTab } from './settings.js';
-import { escapeHtml, sanitizeHtml, processInternalLinks, processContentImages, processImagePaths, beautifyContentForWechat } from './utils.js';
+import { escapeHtml, sanitizeHtml, processInternalLinks, processContentImages, processImagePaths, beautifyContentForWechat, themes, applyTheme } from './utils.js';
 
 class WeChatMPPublisher extends Plugin {
   settings = {
@@ -13,7 +13,8 @@ class WeChatMPPublisher extends Plugin {
     appId: '',
     appSecret: '',
     accessToken: '',
-    accessTokenExpire: 0
+    accessTokenExpire: 0,
+    defaultTheme: 'default'
   };
 
   api;
@@ -103,7 +104,8 @@ class WeChatMPPublisher extends Plugin {
       appId: '',
       appSecret: '',
       accessToken: '',
-      accessTokenExpire: 0
+      accessTokenExpire: 0,
+      defaultTheme: 'default'
     }, await this.loadData());
     this.api.updateSettings(this.settings);
   }
@@ -262,7 +264,9 @@ class WeChatMPPublisher extends Plugin {
       htmlContent = await processImagePaths(htmlContent, activeFile, this.app);
       
       console.log('开始创建预览模态框...');
-      this.createPreviewModal(activeFile.basename, htmlContent, coverImage);
+      const sidebarView = this.app.workspace.getLeavesOfType('wechat-mp-publisher-sidebar')[0]?.view;
+      const currentTheme = sidebarView?.currentTheme || 'default';
+      this.createPreviewModal(activeFile.basename, htmlContent, coverImage, currentTheme);
       
       new Notice('已生成微信公众号格式预览', 3000);
       console.log('预览完成');
@@ -273,7 +277,7 @@ class WeChatMPPublisher extends Plugin {
     }
   }
 
-  createPreviewModal(title, htmlContent, coverImage = '') {
+  createPreviewModal(title, htmlContent, coverImage = '', themeName = 'default') {
     const modal = document.createElement('div');
     modal.style.cssText = `
       position: fixed;
@@ -305,7 +309,6 @@ class WeChatMPPublisher extends Plugin {
       padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.7;
-      color: #333;
     `;
     
     const titleEl = document.createElement('h1');
@@ -315,7 +318,6 @@ class WeChatMPPublisher extends Plugin {
       font-size: 24px;
       font-weight: 600;
       text-align: center;
-      color: #333;
     `;
     
     let coverImageEl;
@@ -343,6 +345,7 @@ class WeChatMPPublisher extends Plugin {
     contentEl.innerHTML = htmlContent;
     
     this.applyWechatStyle(contentEl);
+    applyTheme(contentEl, themeName);
     
     const closeButton = document.createElement('button');
     closeButton.textContent = '关闭预览';

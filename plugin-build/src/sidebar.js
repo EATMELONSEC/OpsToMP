@@ -1,4 +1,5 @@
 import { ItemView, Notice } from 'obsidian';
+import { themes } from './utils.js';
 
 export class PublisherSidebarView extends ItemView {
   constructor(leaf, plugin) {
@@ -9,6 +10,7 @@ export class PublisherSidebarView extends ItemView {
     this.drafts = [];
     this.currentView = 'main';
     this.digest = '';
+    this.currentTheme = 'default';
   }
 
   getViewType() {
@@ -29,6 +31,7 @@ export class PublisherSidebarView extends ItemView {
 
   renderMainView() {
     this.currentView = 'main';
+    this.currentTheme = this.plugin.settings.defaultTheme || 'default';
     const container = this.contentEl;
     container.empty();
 
@@ -44,11 +47,11 @@ export class PublisherSidebarView extends ItemView {
       if (this.coverFile) {
         const reader = new FileReader();
         reader.onload = (event) => {
-          this.plugin.previewCurrentDocument(event.target.result);
+          this.plugin.previewCurrentDocument(event.target.result, this.currentTheme);
         };
         reader.readAsDataURL(this.coverFile);
       } else {
-        this.plugin.previewCurrentDocument();
+        this.plugin.previewCurrentDocument('', this.currentTheme);
       }
     });
 
@@ -119,6 +122,39 @@ export class PublisherSidebarView extends ItemView {
         digestInput.value = this.digest;
       }
     });
+
+    const themeSection = container.createEl('div');
+    themeSection.style.marginBottom = '15px';
+    
+    const themeLabel = themeSection.createEl('h3', { text: '预览主题' });
+    themeLabel.style.fontSize = '14px';
+    themeLabel.style.marginBottom = '8px';
+    
+    const themeSelector = themeSection.createEl('div');
+    themeSelector.style.display = 'flex';
+    themeSelector.style.flexWrap = 'wrap';
+    themeSelector.style.gap = '6px';
+    
+    Object.keys(themes).forEach(themeKey => {
+      const theme = themes[themeKey];
+      const themeButton = themeSelector.createEl('button', { text: theme.name });
+      themeButton.style.flex = '1';
+      themeButton.style.minWidth = '60px';
+      themeButton.style.padding = '6px 12px';
+      themeButton.style.fontSize = '12px';
+      themeButton.style.border = '1px solid var(--background-modifier-border)';
+      themeButton.style.borderRadius = '4px';
+      themeButton.style.cursor = 'pointer';
+      themeButton.style.transition = 'all 0.2s';
+      
+      themeButton.addEventListener('click', () => {
+        this.currentTheme = themeKey;
+        this.updateThemeButtons(themeSelector);
+        new Notice(`已切换到${theme.name}主题`, 2000);
+      });
+    });
+    
+    this.updateThemeButtons(themeSelector);
 
     const uploadButton = container.createEl('button', { text: '上传至草稿箱' });
     uploadButton.className = 'mod-cta';
@@ -319,6 +355,16 @@ export class PublisherSidebarView extends ItemView {
         this.loadDraftList();
       });
     }
+  }
+
+  updateThemeButtons(themeSelector) {
+    const buttons = themeSelector.querySelectorAll('button');
+    buttons.forEach(btn => {
+      const themeName = Object.keys(themes).find(key => themes[key].name === btn.textContent);
+      const isSelected = themeName === this.currentTheme;
+      btn.style.backgroundColor = isSelected ? 'var(--interactive-accent)' : 'var(--background-secondary)';
+      btn.style.color = isSelected ? 'var(--text-on-accent)' : 'var(--text-normal)';
+    });
   }
 
   async onClose() {

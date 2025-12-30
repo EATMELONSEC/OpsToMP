@@ -467,321 +467,10 @@ var WeChatMPAPI = class {
 };
 
 // src/sidebar.js
-var import_obsidian = require("obsidian");
-var PublisherSidebarView = class extends import_obsidian.ItemView {
-  constructor(leaf, plugin) {
-    super(leaf);
-    this.plugin = plugin;
-    this.coverImage = "";
-    this.coverFile = null;
-    this.drafts = [];
-    this.currentView = "main";
-    this.digest = "";
-  }
-  getViewType() {
-    return "wechat-mp-publisher-sidebar";
-  }
-  getDisplayText() {
-    return "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F";
-  }
-  getIcon() {
-    return "paper-plane";
-  }
-  async onOpen() {
-    this.renderMainView();
-  }
-  renderMainView() {
-    this.currentView = "main";
-    const container = this.contentEl;
-    container.empty();
-    const titleEl = container.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F" });
-    titleEl.style.marginBottom = "20px";
-    const previewButton = container.createEl("button", { text: "\u9884\u89C8\u5F53\u524D\u6587\u6863" });
-    previewButton.className = "mod-cta";
-    previewButton.style.width = "100%";
-    previewButton.style.marginBottom = "10px";
-    previewButton.style.padding = "8px";
-    previewButton.addEventListener("click", () => {
-      if (this.coverFile) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          this.plugin.previewCurrentDocument(event.target.result);
-        };
-        reader.readAsDataURL(this.coverFile);
-      } else {
-        this.plugin.previewCurrentDocument();
-      }
-    });
-    const coverSection = container.createEl("div");
-    coverSection.style.marginBottom = "15px";
-    const coverLabel = coverSection.createEl("h3", { text: "\u5C01\u9762\u8BBE\u7F6E" });
-    coverLabel.style.fontSize = "14px";
-    coverLabel.style.marginBottom = "8px";
-    const coverInput = coverSection.createEl("input", {
-      type: "file",
-      accept: "image/*"
-    });
-    coverInput.style.width = "100%";
-    coverInput.style.padding = "8px";
-    coverInput.style.marginBottom = "8px";
-    const coverPreview = coverSection.createEl("div");
-    coverPreview.style.border = "1px solid var(--background-modifier-border)";
-    coverPreview.style.borderRadius = "4px";
-    coverPreview.style.height = "100px";
-    coverPreview.style.overflow = "hidden";
-    coverPreview.style.display = "flex";
-    coverPreview.style.alignItems = "center";
-    coverPreview.style.justifyContent = "center";
-    coverPreview.textContent = "\u5C01\u9762\u9884\u89C8";
-    coverInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        this.coverFile = file;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          coverPreview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        this.coverFile = null;
-        coverPreview.innerHTML = "\u5C01\u9762\u9884\u89C8";
-      }
-    });
-    const digestSection = container.createEl("div");
-    digestSection.style.marginBottom = "15px";
-    const digestLabel = digestSection.createEl("h3", { text: "\u6587\u7AE0\u6458\u8981" });
-    digestLabel.style.fontSize = "14px";
-    digestLabel.style.marginBottom = "8px";
-    const digestInput = digestSection.createEl("textarea", {
-      placeholder: "\u8BF7\u8F93\u5165\u6587\u7AE0\u6458\u8981\uFF08\u9009\u586B\uFF0C120\u5B57\u4EE5\u5185\uFF09",
-      rows: 3
-    });
-    digestInput.style.width = "100%";
-    digestInput.style.padding = "8px";
-    digestInput.style.marginBottom = "8px";
-    digestInput.style.border = "1px solid var(--background-modifier-border)";
-    digestInput.style.borderRadius = "4px";
-    digestInput.style.resize = "vertical";
-    digestInput.style.fontFamily = "inherit";
-    digestInput.style.fontSize = "14px";
-    digestInput.addEventListener("input", (e) => {
-      this.digest = e.target.value;
-      if (this.digest.length > 120) {
-        this.digest = this.digest.substring(0, 120);
-        digestInput.value = this.digest;
-      }
-    });
-    const uploadButton = container.createEl("button", { text: "\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1" });
-    uploadButton.className = "mod-cta";
-    uploadButton.style.width = "100%";
-    uploadButton.style.marginBottom = "10px";
-    uploadButton.style.padding = "8px";
-    uploadButton.addEventListener("click", async () => {
-      await this.plugin.uploadToDraftBox(this.coverFile, this.digest);
-    });
-    const divider = container.createEl("hr");
-    divider.style.margin = "15px 0";
-    divider.style.border = "none";
-    divider.style.borderTop = "1px solid var(--background-modifier-border)";
-    const draftListButton = container.createEl("button", { text: "\u67E5\u770B\u8349\u7A3F\u5217\u8868" });
-    draftListButton.style.width = "100%";
-    draftListButton.style.marginBottom = "10px";
-    draftListButton.style.padding = "8px";
-    draftListButton.addEventListener("click", async () => {
-      await this.loadDraftList();
-    });
-    const networkTestSection = container.createEl("div");
-    networkTestSection.style.marginBottom = "15px";
-    const networkTestLabel = networkTestSection.createEl("h3", { text: "\u7F51\u7EDC\u6D4B\u8BD5" });
-    networkTestLabel.style.fontSize = "14px";
-    networkTestLabel.style.marginBottom = "8px";
-    const networkTestInput = networkTestSection.createEl("input", {
-      type: "text",
-      placeholder: "http://baidu.com"
-    });
-    networkTestInput.style.width = "100%";
-    networkTestInput.style.padding = "8px";
-    networkTestInput.style.marginBottom = "8px";
-    networkTestInput.style.border = "1px solid var(--background-modifier-border)";
-    networkTestInput.style.borderRadius = "4px";
-    networkTestInput.value = this.plugin.settings.networkTestUrl;
-    const networkTestButton = networkTestSection.createEl("button", { text: "\u6D4B\u8BD5\u8FDE\u63A5" });
-    networkTestButton.style.width = "100%";
-    networkTestButton.style.padding = "8px";
-    networkTestButton.style.marginBottom = "8px";
-    networkTestButton.addEventListener("click", async () => {
-      const testUrl = networkTestInput.value || this.plugin.settings.networkTestUrl;
-      await this.plugin.testNetworkConnection(testUrl);
-    });
-    networkTestInput.addEventListener("change", async (e) => {
-      this.plugin.settings.networkTestUrl = e.target.value;
-      await this.plugin.saveSettings();
-    });
-    const networkTestNote = networkTestSection.createEl("p");
-    networkTestNote.style.fontSize = "12px";
-    networkTestNote.style.color = "var(--text-muted)";
-    networkTestNote.textContent = "\u63D0\u793A\uFF1A\u53EF\u4EE5\u6D4B\u8BD5\u4EFB\u4F55HTTP/HTTPS\u5730\u5740\uFF0C\u5305\u62EC\u5FAE\u4FE1\u516C\u4F17\u53F7API\u5730\u5740";
-    const apiTestButton = container.createEl("button", { text: "API\u6D4B\u8BD5" });
-    apiTestButton.style.width = "100%";
-    apiTestButton.style.marginBottom = "10px";
-    apiTestButton.style.padding = "8px";
-    apiTestButton.addEventListener("click", async () => {
-      await this.plugin.testAPIKeys();
-    });
-    const noteEl = container.createEl("p");
-    noteEl.style.fontSize = "12px";
-    noteEl.style.color = "var(--text-muted)";
-    noteEl.textContent = "\u63D0\u793A\uFF1A\u4E0A\u4F20\u524D\u8BF7\u786E\u4FDD\u5DF2\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7\u4FE1\u606F";
-  }
-  async loadDraftList() {
-    this.currentView = "drafts";
-    const container = this.contentEl;
-    container.empty();
-    const header = container.createEl("div");
-    header.style.display = "flex";
-    header.style.justifyContent = "space-between";
-    header.style.alignItems = "center";
-    header.style.marginBottom = "15px";
-    const titleEl = header.createEl("h2", { text: "\u8349\u7A3F\u5217\u8868" });
-    titleEl.style.margin = "0";
-    const backButton = header.createEl("button", { text: "\u2190 \u8FD4\u56DE" });
-    backButton.style.padding = "4px 8px";
-    backButton.addEventListener("click", () => {
-      this.renderMainView();
-    });
-    const loadingEl = container.createEl("div", { text: "\u6B63\u5728\u52A0\u8F7D\u8349\u7A3F\u5217\u8868..." });
-    loadingEl.style.textAlign = "center";
-    loadingEl.style.padding = "20px";
-    loadingEl.style.color = "var(--text-muted)";
-    try {
-      const accessToken = await this.plugin.api.getAccessToken();
-      const result = await this.plugin.api.getDraftList(accessToken, 0, 20, 1);
-      this.drafts = result.item || [];
-      loadingEl.remove();
-      if (this.drafts.length === 0) {
-        const emptyEl = container.createEl("div", { text: "\u6682\u65E0\u8349\u7A3F" });
-        emptyEl.style.textAlign = "center";
-        emptyEl.style.padding = "20px";
-        emptyEl.style.color = "var(--text-muted)";
-        return;
-      }
-      const listContainer = container.createEl("div");
-      listContainer.style.maxHeight = "400px";
-      listContainer.style.overflowY = "auto";
-      this.drafts.forEach((draft, index) => {
-        const article = draft.content.news_item[0];
-        const draftItem = listContainer.createEl("div");
-        draftItem.style.border = "1px solid var(--background-modifier-border)";
-        draftItem.style.borderRadius = "4px";
-        draftItem.style.padding = "12px";
-        draftItem.style.marginBottom = "10px";
-        draftItem.style.backgroundColor = "var(--background-secondary)";
-        const draftTitle = draftItem.createEl("h4", { text: article.title });
-        draftTitle.style.margin = "0 0 8px 0";
-        draftTitle.style.fontSize = "14px";
-        draftTitle.style.fontWeight = "600";
-        const draftMeta = draftItem.createEl("div");
-        draftMeta.style.fontSize = "12px";
-        draftMeta.style.color = "var(--text-muted)";
-        draftMeta.style.marginBottom = "8px";
-        draftMeta.textContent = `ID: ${article.thumb_media_id || draft.media_id}`;
-        const actions = draftItem.createEl("div");
-        actions.style.display = "flex";
-        actions.style.gap = "8px";
-        const publishButton = actions.createEl("button", { text: "\u53D1\u5E03" });
-        publishButton.style.flex = "1";
-        publishButton.style.padding = "4px 8px";
-        publishButton.style.fontSize = "12px";
-        publishButton.addEventListener("click", async () => {
-          if (confirm(`\u786E\u5B9A\u8981\u53D1\u5E03\u8349\u7A3F"${article.title}"\u5417\uFF1F`)) {
-            try {
-              const publishResult = await this.plugin.api.publishDraft(accessToken, draft.media_id);
-              new import_obsidian.Notice(`\u53D1\u5E03\u6210\u529F\uFF01\u6587\u7AE0ID: ${publishResult.publish_id}`, 5e3);
-              await this.loadDraftList();
-            } catch (error) {
-              new import_obsidian.Notice(`\u53D1\u5E03\u5931\u8D25: ${error.message}`, 5e3);
-            }
-          }
-        });
-        const deleteButton = actions.createEl("button", { text: "\u5220\u9664" });
-        deleteButton.style.flex = "1";
-        deleteButton.style.padding = "4px 8px";
-        deleteButton.style.fontSize = "12px";
-        deleteButton.style.backgroundColor = "var(--interactive-danger)";
-        deleteButton.style.color = "var(--text-on-accent)";
-        deleteButton.addEventListener("click", async () => {
-          if (confirm(`\u786E\u5B9A\u8981\u5220\u9664\u8349\u7A3F"${article.title}"\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\uFF01`)) {
-            try {
-              await this.plugin.api.deleteDraft(accessToken, draft.media_id);
-              new import_obsidian.Notice("\u5220\u9664\u6210\u529F", 3e3);
-              await this.loadDraftList();
-            } catch (error) {
-              new import_obsidian.Notice(`\u5220\u9664\u5931\u8D25: ${error.message}`, 5e3);
-            }
-          }
-        });
-      });
-      const totalCount = container.createEl("div");
-      totalCount.style.marginTop = "10px";
-      totalCount.style.fontSize = "12px";
-      totalCount.style.color = "var(--text-muted)";
-      totalCount.style.textAlign = "center";
-      totalCount.textContent = `\u5171 ${this.drafts.length} \u4E2A\u8349\u7A3F`;
-    } catch (error) {
-      loadingEl.remove();
-      const errorEl = container.createEl("div", { text: `\u52A0\u8F7D\u5931\u8D25: ${error.message}` });
-      errorEl.style.textAlign = "center";
-      errorEl.style.padding = "20px";
-      errorEl.style.color = "var(--text-error)";
-      const retryButton = container.createEl("button", { text: "\u91CD\u8BD5" });
-      retryButton.style.display = "block";
-      retryButton.style.margin = "10px auto";
-      retryButton.addEventListener("click", () => {
-        this.loadDraftList();
-      });
-    }
-  }
-  async onClose() {
-    this.contentEl.empty();
-  }
-};
-
-// src/settings.js
 var import_obsidian2 = require("obsidian");
-var NetworkTestSettingsTab = class extends import_obsidian2.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u8BBE\u7F6E" });
-    containerEl.createEl("h3", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u914D\u7F6E" });
-    new import_obsidian2.Setting(containerEl).setName("AppID").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppID").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppID").setValue(this.plugin.settings.appId).onChange(async (value) => {
-      this.plugin.settings.appId = value;
-      await this.plugin.saveSettings();
-    }));
-    new import_obsidian2.Setting(containerEl).setName("AppSecret").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppSecret").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppSecret").setValue(this.plugin.settings.appSecret).onChange(async (value) => {
-      this.plugin.settings.appSecret = value;
-      await this.plugin.saveSettings();
-    }));
-    containerEl.createEl("h3", { text: "\u7F51\u7EDC\u914D\u7F6E" });
-    new import_obsidian2.Setting(containerEl).setName("\u7F51\u7EDC\u8BF7\u6C42\u8D85\u65F6\u65F6\u95F4").setDesc("\u7F51\u7EDC\u8BF7\u6C42\u7684\u8D85\u65F6\u65F6\u95F4\uFF08\u6BEB\u79D2\uFF09").addText((text) => text.setPlaceholder("5000").setValue(this.plugin.settings.timeout.toString()).onChange(async (value) => {
-      const timeout = parseInt(value);
-      if (!isNaN(timeout) && timeout > 0) {
-        this.plugin.settings.timeout = timeout;
-        await this.plugin.saveSettings();
-        new import_obsidian2.Notice("\u8D85\u65F6\u65F6\u95F4\u5DF2\u66F4\u65B0", 2e3);
-      } else {
-        new import_obsidian2.Notice("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u8D85\u65F6\u65F6\u95F4", 2e3);
-      }
-    }));
-  }
-};
 
 // src/utils.js
-var import_obsidian3 = require("obsidian");
+var import_obsidian = require("obsidian");
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
@@ -975,6 +664,129 @@ function sanitizeHtml(html) {
   });
   return tempDiv.innerHTML;
 }
+var themes = {
+  default: {
+    name: "\u9ED8\u8BA4",
+    primary: "#07C160",
+    background: "#ffffff",
+    text: "#333333",
+    secondary: "#f5f5f5",
+    border: "#e0e0e0",
+    link: "#1AAD19",
+    linkHover: "rgba(26, 173, 25, 0.1)"
+  },
+  simple: {
+    name: "\u7B80\u7EA6",
+    primary: "#333333",
+    background: "#f5f5f5",
+    text: "#666666",
+    secondary: "#e8e8e8",
+    border: "#d0d0d0",
+    link: "#333333",
+    linkHover: "rgba(51, 51, 51, 0.1)"
+  },
+  elegant: {
+    name: "\u4F18\u96C5",
+    primary: "#8B4513",
+    background: "#FFF8DC",
+    text: "#2F4F4F",
+    secondary: "#F5DEB3",
+    border: "#DEB887",
+    link: "#8B4513",
+    linkHover: "rgba(139, 69, 19, 0.1)"
+  },
+  tech: {
+    name: "\u79D1\u6280",
+    primary: "#00BFFF",
+    background: "#1a1a2e",
+    text: "#e0e0e0",
+    secondary: "#2d2d44",
+    border: "#3d3d5c",
+    link: "#00BFFF",
+    linkHover: "rgba(0, 191, 255, 0.1)"
+  },
+  warm: {
+    name: "\u6E29\u6696",
+    primary: "#FF6B6B",
+    background: "#FFF5EE",
+    text: "#4A4A4A",
+    secondary: "#FFE4E1",
+    border: "#FFD4D6",
+    link: "#FF6B6B",
+    linkHover: "rgba(255, 107, 107, 0.1)"
+  },
+  fresh: {
+    name: "\u6E05\u65B0",
+    primary: "#4ECDC4",
+    background: "#F0FFF4",
+    text: "#2D5A27",
+    secondary: "#CBF3F0",
+    border: "#95E1D3",
+    link: "#4ECDC4",
+    linkHover: "rgba(78, 205, 196, 0.1)"
+  },
+  business: {
+    name: "\u5546\u52A1",
+    primary: "#1E3A8A",
+    background: "#F8F9FA",
+    text: "#2C3E50",
+    secondary: "#E8ECF1",
+    border: "#BDC3C7",
+    link: "#1E3A8A",
+    linkHover: "rgba(30, 58, 138, 0.1)"
+  }
+};
+function applyTheme(container, themeName) {
+  const theme = themes[themeName] || themes.default;
+  container.style.backgroundColor = theme.background;
+  container.style.color = theme.text;
+  const title = container.querySelector("h1");
+  if (title) {
+    title.style.color = theme.text;
+  }
+  const paragraphs = container.querySelectorAll("p");
+  paragraphs.forEach((p) => {
+    p.style.color = theme.text;
+  });
+  const headings = container.querySelectorAll("h1, h2, h3, h4");
+  headings.forEach((h) => {
+    h.style.color = theme.text;
+    h.style.borderBottomColor = theme.border;
+  });
+  const links = container.querySelectorAll("a");
+  links.forEach((a) => {
+    a.style.color = theme.link;
+    a.style.borderBottomColor = theme.linkHover;
+  });
+  const blockquotes = container.querySelectorAll("blockquote");
+  blockquotes.forEach((quote) => {
+    quote.style.borderLeftColor = theme.primary;
+    quote.style.backgroundColor = theme.secondary;
+  });
+  const tables = container.querySelectorAll("table");
+  tables.forEach((table) => {
+    table.style.borderColor = theme.border;
+  });
+  const tableHeaders = container.querySelectorAll("th");
+  tableHeaders.forEach((th) => {
+    th.style.backgroundColor = theme.secondary;
+    th.style.color = theme.text;
+  });
+  const images = container.querySelectorAll("img");
+  images.forEach((img) => {
+    img.style.backgroundColor = theme.background;
+    img.style.borderColor = theme.border;
+  });
+  const codes = container.querySelectorAll("pre, code");
+  codes.forEach((code) => {
+    code.style.backgroundColor = theme.secondary;
+    code.style.borderColor = theme.border;
+  });
+  const hr = container.querySelectorAll("hr");
+  hr.forEach((line) => {
+    line.style.borderTopColor = theme.border;
+  });
+}
 function processInternalLinks(htmlContent) {
   const internalImageRegex = /!\[\[(.*?)\]\]/g;
   return htmlContent.replace(internalImageRegex, (match, imagePath) => {
@@ -1003,7 +815,7 @@ async function processContentImages(htmlContent, accessToken, activeFile, upload
         } else {
           file = app.metadataCache.getFirstLinkpathDest(src, activeFile.path);
         }
-        if (file && file instanceof import_obsidian3.TFile) {
+        if (file && file instanceof import_obsidian.TFile) {
           const fileContent = await app.vault.readBinary(file);
           const fileBuffer = Buffer.from(fileContent);
           const imageUrl = await uploadSingleImage(
@@ -1043,7 +855,7 @@ async function processImagePaths(htmlContent, activeFile, app) {
         } else {
           file = app.metadataCache.getFirstLinkpathDest(src, activeFile.path);
         }
-        if (file && file instanceof import_obsidian3.TFile) {
+        if (file && file instanceof import_obsidian.TFile) {
           src = app.vault.getResourcePath(file);
           img.setAttribute("src", src);
         }
@@ -1197,6 +1009,366 @@ function beautifyContentForWechat(htmlContent) {
   return tempDiv.innerHTML;
 }
 
+// src/sidebar.js
+var PublisherSidebarView = class extends import_obsidian2.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+    this.coverImage = "";
+    this.coverFile = null;
+    this.drafts = [];
+    this.currentView = "main";
+    this.digest = "";
+    this.currentTheme = "default";
+  }
+  getViewType() {
+    return "wechat-mp-publisher-sidebar";
+  }
+  getDisplayText() {
+    return "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F";
+  }
+  getIcon() {
+    return "paper-plane";
+  }
+  async onOpen() {
+    this.renderMainView();
+  }
+  renderMainView() {
+    this.currentView = "main";
+    this.currentTheme = this.plugin.settings.defaultTheme || "default";
+    const container = this.contentEl;
+    container.empty();
+    const titleEl = container.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F" });
+    titleEl.style.marginBottom = "20px";
+    const previewButton = container.createEl("button", { text: "\u9884\u89C8\u5F53\u524D\u6587\u6863" });
+    previewButton.className = "mod-cta";
+    previewButton.style.width = "100%";
+    previewButton.style.marginBottom = "10px";
+    previewButton.style.padding = "8px";
+    previewButton.addEventListener("click", () => {
+      if (this.coverFile) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          this.plugin.previewCurrentDocument(event.target.result, this.currentTheme);
+        };
+        reader.readAsDataURL(this.coverFile);
+      } else {
+        this.plugin.previewCurrentDocument("", this.currentTheme);
+      }
+    });
+    const coverSection = container.createEl("div");
+    coverSection.style.marginBottom = "15px";
+    const coverLabel = coverSection.createEl("h3", { text: "\u5C01\u9762\u8BBE\u7F6E" });
+    coverLabel.style.fontSize = "14px";
+    coverLabel.style.marginBottom = "8px";
+    const coverInput = coverSection.createEl("input", {
+      type: "file",
+      accept: "image/*"
+    });
+    coverInput.style.width = "100%";
+    coverInput.style.padding = "8px";
+    coverInput.style.marginBottom = "8px";
+    const coverPreview = coverSection.createEl("div");
+    coverPreview.style.border = "1px solid var(--background-modifier-border)";
+    coverPreview.style.borderRadius = "4px";
+    coverPreview.style.height = "100px";
+    coverPreview.style.overflow = "hidden";
+    coverPreview.style.display = "flex";
+    coverPreview.style.alignItems = "center";
+    coverPreview.style.justifyContent = "center";
+    coverPreview.textContent = "\u5C01\u9762\u9884\u89C8";
+    coverInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.coverFile = file;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          coverPreview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        this.coverFile = null;
+        coverPreview.innerHTML = "\u5C01\u9762\u9884\u89C8";
+      }
+    });
+    const digestSection = container.createEl("div");
+    digestSection.style.marginBottom = "15px";
+    const digestLabel = digestSection.createEl("h3", { text: "\u6587\u7AE0\u6458\u8981" });
+    digestLabel.style.fontSize = "14px";
+    digestLabel.style.marginBottom = "8px";
+    const digestInput = digestSection.createEl("textarea", {
+      placeholder: "\u8BF7\u8F93\u5165\u6587\u7AE0\u6458\u8981\uFF08\u9009\u586B\uFF0C120\u5B57\u4EE5\u5185\uFF09",
+      rows: 3
+    });
+    digestInput.style.width = "100%";
+    digestInput.style.padding = "8px";
+    digestInput.style.marginBottom = "8px";
+    digestInput.style.border = "1px solid var(--background-modifier-border)";
+    digestInput.style.borderRadius = "4px";
+    digestInput.style.resize = "vertical";
+    digestInput.style.fontFamily = "inherit";
+    digestInput.style.fontSize = "14px";
+    digestInput.addEventListener("input", (e) => {
+      this.digest = e.target.value;
+      if (this.digest.length > 120) {
+        this.digest = this.digest.substring(0, 120);
+        digestInput.value = this.digest;
+      }
+    });
+    const themeSection = container.createEl("div");
+    themeSection.style.marginBottom = "15px";
+    const themeLabel = themeSection.createEl("h3", { text: "\u9884\u89C8\u4E3B\u9898" });
+    themeLabel.style.fontSize = "14px";
+    themeLabel.style.marginBottom = "8px";
+    const themeSelector = themeSection.createEl("div");
+    themeSelector.style.display = "flex";
+    themeSelector.style.flexWrap = "wrap";
+    themeSelector.style.gap = "6px";
+    Object.keys(themes).forEach((themeKey) => {
+      const theme = themes[themeKey];
+      const themeButton = themeSelector.createEl("button", { text: theme.name });
+      themeButton.style.flex = "1";
+      themeButton.style.minWidth = "60px";
+      themeButton.style.padding = "6px 12px";
+      themeButton.style.fontSize = "12px";
+      themeButton.style.border = "1px solid var(--background-modifier-border)";
+      themeButton.style.borderRadius = "4px";
+      themeButton.style.cursor = "pointer";
+      themeButton.style.transition = "all 0.2s";
+      themeButton.addEventListener("click", () => {
+        this.currentTheme = themeKey;
+        this.updateThemeButtons(themeSelector);
+        new import_obsidian2.Notice(`\u5DF2\u5207\u6362\u5230${theme.name}\u4E3B\u9898`, 2e3);
+      });
+    });
+    this.updateThemeButtons(themeSelector);
+    const uploadButton = container.createEl("button", { text: "\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1" });
+    uploadButton.className = "mod-cta";
+    uploadButton.style.width = "100%";
+    uploadButton.style.marginBottom = "10px";
+    uploadButton.style.padding = "8px";
+    uploadButton.addEventListener("click", async () => {
+      await this.plugin.uploadToDraftBox(this.coverFile, this.digest);
+    });
+    const divider = container.createEl("hr");
+    divider.style.margin = "15px 0";
+    divider.style.border = "none";
+    divider.style.borderTop = "1px solid var(--background-modifier-border)";
+    const draftListButton = container.createEl("button", { text: "\u67E5\u770B\u8349\u7A3F\u5217\u8868" });
+    draftListButton.style.width = "100%";
+    draftListButton.style.marginBottom = "10px";
+    draftListButton.style.padding = "8px";
+    draftListButton.addEventListener("click", async () => {
+      await this.loadDraftList();
+    });
+    const networkTestSection = container.createEl("div");
+    networkTestSection.style.marginBottom = "15px";
+    const networkTestLabel = networkTestSection.createEl("h3", { text: "\u7F51\u7EDC\u6D4B\u8BD5" });
+    networkTestLabel.style.fontSize = "14px";
+    networkTestLabel.style.marginBottom = "8px";
+    const networkTestInput = networkTestSection.createEl("input", {
+      type: "text",
+      placeholder: "http://baidu.com"
+    });
+    networkTestInput.style.width = "100%";
+    networkTestInput.style.padding = "8px";
+    networkTestInput.style.marginBottom = "8px";
+    networkTestInput.style.border = "1px solid var(--background-modifier-border)";
+    networkTestInput.style.borderRadius = "4px";
+    networkTestInput.value = this.plugin.settings.networkTestUrl;
+    const networkTestButton = networkTestSection.createEl("button", { text: "\u6D4B\u8BD5\u8FDE\u63A5" });
+    networkTestButton.style.width = "100%";
+    networkTestButton.style.padding = "8px";
+    networkTestButton.style.marginBottom = "8px";
+    networkTestButton.addEventListener("click", async () => {
+      const testUrl = networkTestInput.value || this.plugin.settings.networkTestUrl;
+      await this.plugin.testNetworkConnection(testUrl);
+    });
+    networkTestInput.addEventListener("change", async (e) => {
+      this.plugin.settings.networkTestUrl = e.target.value;
+      await this.plugin.saveSettings();
+    });
+    const networkTestNote = networkTestSection.createEl("p");
+    networkTestNote.style.fontSize = "12px";
+    networkTestNote.style.color = "var(--text-muted)";
+    networkTestNote.textContent = "\u63D0\u793A\uFF1A\u53EF\u4EE5\u6D4B\u8BD5\u4EFB\u4F55HTTP/HTTPS\u5730\u5740\uFF0C\u5305\u62EC\u5FAE\u4FE1\u516C\u4F17\u53F7API\u5730\u5740";
+    const apiTestButton = container.createEl("button", { text: "API\u6D4B\u8BD5" });
+    apiTestButton.style.width = "100%";
+    apiTestButton.style.marginBottom = "10px";
+    apiTestButton.style.padding = "8px";
+    apiTestButton.addEventListener("click", async () => {
+      await this.plugin.testAPIKeys();
+    });
+    const noteEl = container.createEl("p");
+    noteEl.style.fontSize = "12px";
+    noteEl.style.color = "var(--text-muted)";
+    noteEl.textContent = "\u63D0\u793A\uFF1A\u4E0A\u4F20\u524D\u8BF7\u786E\u4FDD\u5DF2\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7\u4FE1\u606F";
+  }
+  async loadDraftList() {
+    this.currentView = "drafts";
+    const container = this.contentEl;
+    container.empty();
+    const header = container.createEl("div");
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.style.marginBottom = "15px";
+    const titleEl = header.createEl("h2", { text: "\u8349\u7A3F\u5217\u8868" });
+    titleEl.style.margin = "0";
+    const backButton = header.createEl("button", { text: "\u2190 \u8FD4\u56DE" });
+    backButton.style.padding = "4px 8px";
+    backButton.addEventListener("click", () => {
+      this.renderMainView();
+    });
+    const loadingEl = container.createEl("div", { text: "\u6B63\u5728\u52A0\u8F7D\u8349\u7A3F\u5217\u8868..." });
+    loadingEl.style.textAlign = "center";
+    loadingEl.style.padding = "20px";
+    loadingEl.style.color = "var(--text-muted)";
+    try {
+      const accessToken = await this.plugin.api.getAccessToken();
+      const result = await this.plugin.api.getDraftList(accessToken, 0, 20, 1);
+      this.drafts = result.item || [];
+      loadingEl.remove();
+      if (this.drafts.length === 0) {
+        const emptyEl = container.createEl("div", { text: "\u6682\u65E0\u8349\u7A3F" });
+        emptyEl.style.textAlign = "center";
+        emptyEl.style.padding = "20px";
+        emptyEl.style.color = "var(--text-muted)";
+        return;
+      }
+      const listContainer = container.createEl("div");
+      listContainer.style.maxHeight = "400px";
+      listContainer.style.overflowY = "auto";
+      this.drafts.forEach((draft, index) => {
+        const article = draft.content.news_item[0];
+        const draftItem = listContainer.createEl("div");
+        draftItem.style.border = "1px solid var(--background-modifier-border)";
+        draftItem.style.borderRadius = "4px";
+        draftItem.style.padding = "12px";
+        draftItem.style.marginBottom = "10px";
+        draftItem.style.backgroundColor = "var(--background-secondary)";
+        const draftTitle = draftItem.createEl("h4", { text: article.title });
+        draftTitle.style.margin = "0 0 8px 0";
+        draftTitle.style.fontSize = "14px";
+        draftTitle.style.fontWeight = "600";
+        const draftMeta = draftItem.createEl("div");
+        draftMeta.style.fontSize = "12px";
+        draftMeta.style.color = "var(--text-muted)";
+        draftMeta.style.marginBottom = "8px";
+        draftMeta.textContent = `ID: ${article.thumb_media_id || draft.media_id}`;
+        const actions = draftItem.createEl("div");
+        actions.style.display = "flex";
+        actions.style.gap = "8px";
+        const publishButton = actions.createEl("button", { text: "\u53D1\u5E03" });
+        publishButton.style.flex = "1";
+        publishButton.style.padding = "4px 8px";
+        publishButton.style.fontSize = "12px";
+        publishButton.addEventListener("click", async () => {
+          if (confirm(`\u786E\u5B9A\u8981\u53D1\u5E03\u8349\u7A3F"${article.title}"\u5417\uFF1F`)) {
+            try {
+              const publishResult = await this.plugin.api.publishDraft(accessToken, draft.media_id);
+              new import_obsidian2.Notice(`\u53D1\u5E03\u6210\u529F\uFF01\u6587\u7AE0ID: ${publishResult.publish_id}`, 5e3);
+              await this.loadDraftList();
+            } catch (error) {
+              new import_obsidian2.Notice(`\u53D1\u5E03\u5931\u8D25: ${error.message}`, 5e3);
+            }
+          }
+        });
+        const deleteButton = actions.createEl("button", { text: "\u5220\u9664" });
+        deleteButton.style.flex = "1";
+        deleteButton.style.padding = "4px 8px";
+        deleteButton.style.fontSize = "12px";
+        deleteButton.style.backgroundColor = "var(--interactive-danger)";
+        deleteButton.style.color = "var(--text-on-accent)";
+        deleteButton.addEventListener("click", async () => {
+          if (confirm(`\u786E\u5B9A\u8981\u5220\u9664\u8349\u7A3F"${article.title}"\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\uFF01`)) {
+            try {
+              await this.plugin.api.deleteDraft(accessToken, draft.media_id);
+              new import_obsidian2.Notice("\u5220\u9664\u6210\u529F", 3e3);
+              await this.loadDraftList();
+            } catch (error) {
+              new import_obsidian2.Notice(`\u5220\u9664\u5931\u8D25: ${error.message}`, 5e3);
+            }
+          }
+        });
+      });
+      const totalCount = container.createEl("div");
+      totalCount.style.marginTop = "10px";
+      totalCount.style.fontSize = "12px";
+      totalCount.style.color = "var(--text-muted)";
+      totalCount.style.textAlign = "center";
+      totalCount.textContent = `\u5171 ${this.drafts.length} \u4E2A\u8349\u7A3F`;
+    } catch (error) {
+      loadingEl.remove();
+      const errorEl = container.createEl("div", { text: `\u52A0\u8F7D\u5931\u8D25: ${error.message}` });
+      errorEl.style.textAlign = "center";
+      errorEl.style.padding = "20px";
+      errorEl.style.color = "var(--text-error)";
+      const retryButton = container.createEl("button", { text: "\u91CD\u8BD5" });
+      retryButton.style.display = "block";
+      retryButton.style.margin = "10px auto";
+      retryButton.addEventListener("click", () => {
+        this.loadDraftList();
+      });
+    }
+  }
+  updateThemeButtons(themeSelector) {
+    const buttons = themeSelector.querySelectorAll("button");
+    buttons.forEach((btn) => {
+      const themeName = Object.keys(themes).find((key) => themes[key].name === btn.textContent);
+      const isSelected = themeName === this.currentTheme;
+      btn.style.backgroundColor = isSelected ? "var(--interactive-accent)" : "var(--background-secondary)";
+      btn.style.color = isSelected ? "var(--text-on-accent)" : "var(--text-normal)";
+    });
+  }
+  async onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/settings.js
+var import_obsidian3 = require("obsidian");
+var NetworkTestSettingsTab = class extends import_obsidian3.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    containerEl.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u8BBE\u7F6E" });
+    containerEl.createEl("h3", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u914D\u7F6E" });
+    new import_obsidian3.Setting(containerEl).setName("AppID").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppID").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppID").setValue(this.plugin.settings.appId).onChange(async (value) => {
+      this.plugin.settings.appId = value;
+      await this.plugin.saveSettings();
+    }));
+    new import_obsidian3.Setting(containerEl).setName("AppSecret").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppSecret").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppSecret").setValue(this.plugin.settings.appSecret).onChange(async (value) => {
+      this.plugin.settings.appSecret = value;
+      await this.plugin.saveSettings();
+    }));
+    containerEl.createEl("h3", { text: "\u7F51\u7EDC\u914D\u7F6E" });
+    new import_obsidian3.Setting(containerEl).setName("\u7F51\u7EDC\u8BF7\u6C42\u8D85\u65F6\u65F6\u95F4").setDesc("\u7F51\u7EDC\u8BF7\u6C42\u7684\u8D85\u65F6\u65F6\u95F4\uFF08\u6BEB\u79D2\uFF09").addText((text) => text.setPlaceholder("5000").setValue(this.plugin.settings.timeout.toString()).onChange(async (value) => {
+      const timeout = parseInt(value);
+      if (!isNaN(timeout) && timeout > 0) {
+        this.plugin.settings.timeout = timeout;
+        await this.plugin.saveSettings();
+        new import_obsidian3.Notice("\u8D85\u65F6\u65F6\u95F4\u5DF2\u66F4\u65B0", 2e3);
+      } else {
+        new import_obsidian3.Notice("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u8D85\u65F6\u65F6\u95F4", 2e3);
+      }
+    }));
+    containerEl.createEl("h3", { text: "\u4E3B\u9898\u8BBE\u7F6E" });
+    new import_obsidian3.Setting(containerEl).setName("\u9ED8\u8BA4\u9884\u89C8\u4E3B\u9898").setDesc("\u9009\u62E9\u9884\u89C8\u65F6\u4F7F\u7528\u7684\u9ED8\u8BA4\u4E3B\u9898").addDropdown((dropdown) => dropdown.addOptions(Object.keys(themes).reduce((acc, key) => {
+      acc[key] = themes[key].name;
+      return acc;
+    }, {})).setValue(this.plugin.settings.defaultTheme || "default").onChange(async (value) => {
+      this.plugin.settings.defaultTheme = value;
+      await this.plugin.saveSettings();
+      new import_obsidian3.Notice(`\u5DF2\u8BBE\u7F6E\u9ED8\u8BA4\u4E3B\u9898\u4E3A${themes[value].name}`, 2e3);
+    }));
+  }
+};
+
 // src/main.js
 var WeChatMPPublisher = class extends import_obsidian4.Plugin {
   constructor() {
@@ -1207,7 +1379,8 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       appId: "",
       appSecret: "",
       accessToken: "",
-      accessTokenExpire: 0
+      accessTokenExpire: 0,
+      defaultTheme: "default"
     });
     __publicField(this, "api");
   }
@@ -1282,7 +1455,8 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       appId: "",
       appSecret: "",
       accessToken: "",
-      accessTokenExpire: 0
+      accessTokenExpire: 0,
+      defaultTheme: "default"
     }, await this.loadData());
     this.api.updateSettings(this.settings);
   }
@@ -1374,6 +1548,7 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
     }
   }
   async previewCurrentDocument(coverImage = "") {
+    var _a;
     console.log("previewCurrentDocument \u88AB\u8C03\u7528");
     const activeFile = this.app.workspace.getActiveFile();
     console.log("\u5F53\u524D\u6D3B\u52A8\u6587\u4EF6:", activeFile);
@@ -1416,7 +1591,9 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       console.log("\u5F00\u59CB\u5904\u7406\u56FE\u7247\u8DEF\u5F84...");
       htmlContent = await processImagePaths(htmlContent, activeFile, this.app);
       console.log("\u5F00\u59CB\u521B\u5EFA\u9884\u89C8\u6A21\u6001\u6846...");
-      this.createPreviewModal(activeFile.basename, htmlContent, coverImage);
+      const sidebarView = (_a = this.app.workspace.getLeavesOfType("wechat-mp-publisher-sidebar")[0]) == null ? void 0 : _a.view;
+      const currentTheme = (sidebarView == null ? void 0 : sidebarView.currentTheme) || "default";
+      this.createPreviewModal(activeFile.basename, htmlContent, coverImage, currentTheme);
       new import_obsidian4.Notice("\u5DF2\u751F\u6210\u5FAE\u4FE1\u516C\u4F17\u53F7\u683C\u5F0F\u9884\u89C8", 3e3);
       console.log("\u9884\u89C8\u5B8C\u6210");
     } catch (error) {
@@ -1424,7 +1601,7 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       new import_obsidian4.Notice("\u9884\u89C8\u6587\u6863\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u65E5\u5FD7", 5e3);
     }
   }
-  createPreviewModal(title, htmlContent, coverImage = "") {
+  createPreviewModal(title, htmlContent, coverImage = "", themeName = "default") {
     const modal = document.createElement("div");
     modal.style.cssText = `
       position: fixed;
@@ -1454,7 +1631,6 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.7;
-      color: #333;
     `;
     const titleEl = document.createElement("h1");
     titleEl.textContent = title;
@@ -1463,7 +1639,6 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       font-size: 24px;
       font-weight: 600;
       text-align: center;
-      color: #333;
     `;
     let coverImageEl;
     if (coverImage) {
@@ -1486,6 +1661,7 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
     const contentEl = document.createElement("div");
     contentEl.innerHTML = htmlContent;
     this.applyWechatStyle(contentEl);
+    applyTheme(contentEl, themeName);
     const closeButton = document.createElement("button");
     closeButton.textContent = "\u5173\u95ED\u9884\u89C8";
     closeButton.style.cssText = `
