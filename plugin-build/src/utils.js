@@ -534,3 +534,183 @@ export function beautifyContentForWechat(htmlContent, themeName = 'default') {
   
   return tempDiv.innerHTML;
 }
+
+export function applyFormatOptions(htmlContent, formatOptions) {
+  if (!formatOptions.enabled) {
+    return htmlContent;
+  }
+  
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = htmlContent;
+  
+  if (formatOptions.removeExtraBreaks) {
+    const allElements = tempDiv.querySelectorAll('*');
+    
+    allElements.forEach(el => {
+      const childNodes = Array.from(el.childNodes);
+      for (let i = 0; i < childNodes.length - 1; i++) {
+        const current = childNodes[i];
+        const next = childNodes[i + 1];
+        if (current.nodeType === Node.TEXT_NODE && next.nodeType === Node.TEXT_NODE) {
+          const combined = current.textContent + next.textContent;
+          if (/\n{2,}/.test(combined)) {
+            current.textContent = combined.replace(/\n{2,}/g, '\n');
+            next.remove();
+          }
+        }
+      }
+      
+      if (el.nodeType === Node.TEXT_NODE) {
+        el.textContent = el.textContent.replace(/\n{2,}/g, '\n');
+      }
+    });
+    
+    const brElements = Array.from(tempDiv.querySelectorAll('br'));
+    for (let i = brElements.length - 1; i >= 0; i--) {
+      const br = brElements[i];
+      const nextElement = br.nextElementSibling;
+      const nextSibling = br.nextSibling;
+      
+      if ((nextElement && nextElement.tagName === 'BR') || 
+          (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE && nextSibling.tagName === 'BR')) {
+        br.remove();
+      }
+    }
+    
+    const emptyParagraphs = Array.from(tempDiv.querySelectorAll('p, div'));
+    const toRemove = new Set();
+    
+    for (let i = 0; i < emptyParagraphs.length; i++) {
+      const p = emptyParagraphs[i];
+      if (p.textContent.trim() !== '' || p.children.length > 0) {
+        continue;
+      }
+      
+      const prev = p.previousElementSibling;
+      const next = p.nextElementSibling;
+      
+      const prevIsEmpty = prev && (prev.tagName === 'P' || prev.tagName === 'DIV') && 
+                         prev.textContent.trim() === '' && prev.children.length === 0;
+      const nextIsEmpty = next && (next.tagName === 'P' || next.tagName === 'DIV') && 
+                         next.textContent.trim() === '' && next.children.length === 0;
+      
+      if (prevIsEmpty || nextIsEmpty) {
+        toRemove.add(p);
+      }
+    }
+    
+    toRemove.forEach(el => el.remove());
+  }
+  
+  if (formatOptions.paragraphSpacing) {
+    const paragraphs = tempDiv.querySelectorAll('p');
+    paragraphs.forEach(p => {
+      p.style.marginBottom = '18px';
+      p.style.lineHeight = '1.8';
+    });
+  }
+  
+  if (formatOptions.unifyHeadings) {
+    const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headingStyles = {
+      h1: { fontSize: '24px', margin: '30px 0 15px', weight: '700' },
+      h2: { fontSize: '20px', margin: '28px 0 12px', weight: '700' },
+      h3: { fontSize: '18px', margin: '25px 0 10px', weight: '600' },
+      h4: { fontSize: '16px', margin: '20px 0 8px', weight: '600' },
+      h5: { fontSize: '15px', margin: '18px 0 8px', weight: '600' },
+      h6: { fontSize: '14px', margin: '16px 0 6px', weight: '600' }
+    };
+    
+    headings.forEach(h => {
+      const tag = h.tagName.toLowerCase();
+      const style = headingStyles[tag];
+      if (style) {
+        h.style.fontSize = style.fontSize;
+        h.style.margin = style.margin;
+        h.style.fontWeight = style.weight;
+        h.style.lineHeight = '1.4';
+      }
+    });
+  }
+  
+  if (formatOptions.optimizeImages) {
+    const images = tempDiv.querySelectorAll('img');
+    images.forEach(img => {
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      img.style.margin = '15px auto';
+      img.style.display = 'block';
+      img.style.borderRadius = '4px';
+      img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
+      img.style.background = '#fff';
+      img.style.padding = '4px';
+      img.style.border = '1px solid #eee';
+      
+      const parent = img.parentElement;
+      if (parent.tagName !== 'P') {
+        parent.style.textAlign = 'center';
+      }
+    });
+  }
+  
+  if (formatOptions.quoteStyle) {
+    const blockquotes = tempDiv.querySelectorAll('blockquote');
+    blockquotes.forEach(quote => {
+      quote.style.margin = '18px 0';
+      quote.style.padding = '15px 20px';
+      quote.style.borderLeft = '4px solid #576b95';
+      quote.style.background = '#f9f9f9';
+      quote.style.color = '#666';
+      quote.style.fontSize = '15px';
+      quote.style.borderRadius = '0 4px 4px 0';
+    });
+  }
+  
+  if (formatOptions.codeBlockStyle) {
+    const preBlocks = tempDiv.querySelectorAll('pre');
+    preBlocks.forEach(pre => {
+      pre.style.margin = '18px 0';
+      pre.style.padding = '15px';
+      pre.style.background = '#f8f8f8';
+      pre.style.borderRadius = '6px';
+      pre.style.overflowX = 'auto';
+      pre.style.fontFamily = '"Consolas", "Monaco", "Courier New", monospace';
+      pre.style.fontSize = '14px';
+      pre.style.lineHeight = '1.6';
+      pre.style.border = '1px solid #eee';
+    });
+    
+    const codes = tempDiv.querySelectorAll('code:not(pre code)');
+    codes.forEach(code => {
+      code.style.background = '#f5f5f5';
+      code.style.padding = '3px 6px';
+      code.style.borderRadius = '3px';
+      code.style.fontFamily = '"Consolas", "Monaco", monospace';
+      code.style.fontSize = '0.9em';
+    });
+  }
+  
+  if (formatOptions.listFormat) {
+    const uls = tempDiv.querySelectorAll('ul');
+    uls.forEach(ul => {
+      ul.style.margin = '18px 0';
+      ul.style.paddingLeft = '28px';
+      ul.style.listStyleType = 'disc';
+    });
+    
+    const ols = tempDiv.querySelectorAll('ol');
+    ols.forEach(ol => {
+      ol.style.margin = '18px 0';
+      ol.style.paddingLeft = '28px';
+      ol.style.listStyleType = 'decimal';
+    });
+    
+    const listItems = tempDiv.querySelectorAll('li');
+    listItems.forEach(li => {
+      li.style.marginBottom = '8px';
+      li.style.lineHeight = '1.8';
+    });
+  }
+  
+  return tempDiv.innerHTML;
+}

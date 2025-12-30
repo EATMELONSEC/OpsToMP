@@ -4,7 +4,7 @@ import http from 'http';
 import { WeChatMPAPI } from './api.js';
 import { PublisherSidebarView } from './sidebar.js';
 import { NetworkTestSettingsTab } from './settings.js';
-import { escapeHtml, sanitizeHtml, processInternalLinks, processContentImages, processImagePaths, beautifyContentForWechat, themes, applyTheme } from './utils.js';
+import { escapeHtml, sanitizeHtml, processInternalLinks, processContentImages, processImagePaths, beautifyContentForWechat, themes, applyTheme, applyFormatOptions } from './utils.js';
 
 class WeChatMPPublisher extends Plugin {
   settings = {
@@ -266,6 +266,13 @@ class WeChatMPPublisher extends Plugin {
       console.log('开始创建预览模态框...');
       const sidebarView = this.app.workspace.getLeavesOfType('wechat-mp-publisher-sidebar')[0]?.view;
       const currentTheme = sidebarView?.currentTheme || 'default';
+      const formatOptions = sidebarView?.formatOptions || { enabled: false };
+      
+      if (formatOptions.enabled) {
+        console.log('应用排版选项...');
+        htmlContent = applyFormatOptions(htmlContent, formatOptions);
+      }
+      
       this.createPreviewModal(activeFile.basename, htmlContent, coverImage, currentTheme);
       
       new Notice('已生成微信公众号格式预览', 3000);
@@ -638,9 +645,15 @@ class WeChatMPPublisher extends Plugin {
       
       const sidebarView = this.app.workspace.getLeavesOfType('wechat-mp-publisher-sidebar')[0]?.view;
       const currentTheme = sidebarView?.currentTheme || this.settings.defaultTheme || 'default';
+      const formatOptions = sidebarView?.formatOptions || { enabled: false };
       
       notice.setMessage('正在美化文档内容...');
       content = beautifyContentForWechat(content, currentTheme);
+      
+      if (formatOptions.enabled) {
+        console.log('应用排版选项...');
+        content = applyFormatOptions(content, formatOptions);
+      }
       
       let coverMediaId = '';
       if (coverImage) {

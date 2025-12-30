@@ -24,6 +24,16 @@ export class PublisherSidebarView extends ItemView {
       totalPages: 0
     };
     this.publishedArticles = [];
+    this.formatOptions = {
+      enabled: false,
+      paragraphSpacing: true,
+      unifyHeadings: true,
+      optimizeImages: true,
+      quoteStyle: true,
+      codeBlockStyle: true,
+      listFormat: true,
+      removeExtraBreaks: true
+    };
   }
 
   getViewType() {
@@ -168,6 +178,58 @@ export class PublisherSidebarView extends ItemView {
     });
     
     this.updateThemeButtons(themeSelector);
+
+    const formatSection = container.createEl('div');
+    formatSection.style.marginBottom = '15px';
+    
+    const formatLabel = formatSection.createEl('h3', { text: '一键排版' });
+    formatLabel.style.fontSize = '14px';
+    formatLabel.style.marginBottom = '8px';
+    
+    const formatToggle = formatSection.createEl('label');
+    formatToggle.style.display = 'flex';
+    formatToggle.style.alignItems = 'center';
+    formatToggle.style.gap = '8px';
+    formatToggle.style.marginBottom = '10px';
+    
+    const formatCheckbox = formatToggle.createEl('input', { type: 'checkbox' });
+    formatCheckbox.checked = this.formatOptions.enabled;
+    formatCheckbox.addEventListener('change', (e) => {
+      this.formatOptions.enabled = e.target.checked;
+    });
+    
+    formatToggle.createEl('span', { text: '启用一键排版' });
+    
+    const optionsContainer = formatSection.createEl('div');
+    optionsContainer.style.display = 'grid';
+    optionsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    optionsContainer.style.gap = '8px';
+    
+    const optionLabels = {
+      paragraphSpacing: '自动添加段落间距',
+      unifyHeadings: '统一标题格式',
+      optimizeImages: '优化图片显示',
+      quoteStyle: '添加引用样式',
+      codeBlockStyle: '代码块美化',
+      listFormat: '列表格式优化',
+      removeExtraBreaks: '取消多余换行'
+    };
+    
+    Object.keys(optionLabels).forEach(optionKey => {
+      const optionLabel = optionsContainer.createEl('label');
+      optionLabel.style.display = 'flex';
+      optionLabel.style.alignItems = 'center';
+      optionLabel.style.gap = '6px';
+      optionLabel.style.fontSize = '12px';
+      
+      const optionCheckbox = optionLabel.createEl('input', { type: 'checkbox' });
+      optionCheckbox.checked = this.formatOptions[optionKey];
+      optionCheckbox.addEventListener('change', (e) => {
+        this.formatOptions[optionKey] = e.target.checked;
+      });
+      
+      optionLabel.createEl('span', { text: optionLabels[optionKey] });
+    });
 
     const uploadButton = container.createEl('button', { text: '上传至草稿箱' });
     uploadButton.className = 'mod-cta';
