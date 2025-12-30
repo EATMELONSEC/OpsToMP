@@ -254,7 +254,7 @@ var WeChatMPAPI = class {
       }
     });
   }
-  async createDraft(accessToken, title, content, coverMediaId = "") {
+  async createDraft(accessToken, title, content, coverMediaId = "", digest = "") {
     try {
       const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${accessToken}`;
       const article = {
@@ -262,7 +262,7 @@ var WeChatMPAPI = class {
         content,
         content_source_url: "",
         author: "",
-        digest: content.substring(0, 100) + "...",
+        digest: digest || content.substring(0, 100) + "...",
         need_open_comment: 0,
         only_fans_can_comment: 0
       };
@@ -476,6 +476,7 @@ var PublisherSidebarView = class extends import_obsidian.ItemView {
     this.coverFile = null;
     this.drafts = [];
     this.currentView = "main";
+    this.digest = "";
   }
   getViewType() {
     return "wechat-mp-publisher-sidebar";
@@ -546,13 +547,37 @@ var PublisherSidebarView = class extends import_obsidian.ItemView {
         coverPreview.innerHTML = "\u5C01\u9762\u9884\u89C8";
       }
     });
+    const digestSection = container.createEl("div");
+    digestSection.style.marginBottom = "15px";
+    const digestLabel = digestSection.createEl("h3", { text: "\u6587\u7AE0\u6458\u8981" });
+    digestLabel.style.fontSize = "14px";
+    digestLabel.style.marginBottom = "8px";
+    const digestInput = digestSection.createEl("textarea", {
+      placeholder: "\u8BF7\u8F93\u5165\u6587\u7AE0\u6458\u8981\uFF08\u9009\u586B\uFF0C120\u5B57\u4EE5\u5185\uFF09",
+      rows: 3
+    });
+    digestInput.style.width = "100%";
+    digestInput.style.padding = "8px";
+    digestInput.style.marginBottom = "8px";
+    digestInput.style.border = "1px solid var(--background-modifier-border)";
+    digestInput.style.borderRadius = "4px";
+    digestInput.style.resize = "vertical";
+    digestInput.style.fontFamily = "inherit";
+    digestInput.style.fontSize = "14px";
+    digestInput.addEventListener("input", (e) => {
+      this.digest = e.target.value;
+      if (this.digest.length > 120) {
+        this.digest = this.digest.substring(0, 120);
+        digestInput.value = this.digest;
+      }
+    });
     const uploadButton = container.createEl("button", { text: "\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1" });
     uploadButton.className = "mod-cta";
     uploadButton.style.width = "100%";
     uploadButton.style.marginBottom = "10px";
     uploadButton.style.padding = "8px";
     uploadButton.addEventListener("click", async () => {
-      await this.plugin.uploadToDraftBox(this.coverFile);
+      await this.plugin.uploadToDraftBox(this.coverFile, this.digest);
     });
     const divider = container.createEl("hr");
     divider.style.margin = "15px 0";
@@ -1674,7 +1699,7 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       `;
     });
   }
-  async uploadToDraftBox(coverImage = null) {
+  async uploadToDraftBox(coverImage = null, digest = "") {
     const notice = new import_obsidian4.Notice("\u6B63\u5728\u51C6\u5907\u4E0A\u4F20\u81F3\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F\u7BB1...", 0);
     try {
       if (!this.settings.appId || !this.settings.appSecret) {
@@ -1721,7 +1746,7 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
         coverMediaId = await this.api.uploadCoverImage(accessToken, coverImage);
       }
       notice.setMessage("\u6B63\u5728\u4E0A\u4F20\u81F3\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F\u7BB1...");
-      const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content, coverMediaId);
+      const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content, coverMediaId, digest);
       notice.hide();
       new import_obsidian4.Notice(`\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1\u6210\u529F\uFF01\u8349\u7A3FID: ${draftResult.media_id}`, 1e4);
       console.log("\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1\u6210\u529F:", draftResult);

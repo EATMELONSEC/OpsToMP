@@ -250,7 +250,7 @@ export class WeChatMPAPI {
     });
   }
 
-  async createDraft(accessToken, title, content, coverMediaId = '') {
+  async createDraft(accessToken, title, content, coverMediaId = '', digest = '') {
     try {
       const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${accessToken}`;
       
@@ -259,7 +259,7 @@ export class WeChatMPAPI {
         content: content,
         content_source_url: '',
         author: '',
-        digest: content.substring(0, 100) + '...',
+        digest: digest || content.substring(0, 100) + '...',
         need_open_comment: 0,
         only_fans_can_comment: 0
       };

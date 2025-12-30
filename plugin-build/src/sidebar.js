@@ -8,6 +8,7 @@ export class PublisherSidebarView extends ItemView {
     this.coverFile = null;
     this.drafts = [];
     this.currentView = 'main';
+    this.digest = '';
   }
 
   getViewType() {
@@ -91,13 +92,41 @@ export class PublisherSidebarView extends ItemView {
       }
     });
 
+    const digestSection = container.createEl('div');
+    digestSection.style.marginBottom = '15px';
+    
+    const digestLabel = digestSection.createEl('h3', { text: '文章摘要' });
+    digestLabel.style.fontSize = '14px';
+    digestLabel.style.marginBottom = '8px';
+    
+    const digestInput = digestSection.createEl('textarea', {
+      placeholder: '请输入文章摘要（选填，120字以内）',
+      rows: 3
+    });
+    digestInput.style.width = '100%';
+    digestInput.style.padding = '8px';
+    digestInput.style.marginBottom = '8px';
+    digestInput.style.border = '1px solid var(--background-modifier-border)';
+    digestInput.style.borderRadius = '4px';
+    digestInput.style.resize = 'vertical';
+    digestInput.style.fontFamily = 'inherit';
+    digestInput.style.fontSize = '14px';
+    
+    digestInput.addEventListener('input', (e) => {
+      this.digest = e.target.value;
+      if (this.digest.length > 120) {
+        this.digest = this.digest.substring(0, 120);
+        digestInput.value = this.digest;
+      }
+    });
+
     const uploadButton = container.createEl('button', { text: '上传至草稿箱' });
     uploadButton.className = 'mod-cta';
     uploadButton.style.width = '100%';
     uploadButton.style.marginBottom = '10px';
     uploadButton.style.padding = '8px';
     uploadButton.addEventListener('click', async () => {
-      await this.plugin.uploadToDraftBox(this.coverFile);
+      await this.plugin.uploadToDraftBox(this.coverFile, this.digest);
     });
 
     const divider = container.createEl('hr');

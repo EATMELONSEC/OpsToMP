@@ -581,7 +581,7 @@ class WeChatMPPublisher extends Plugin {
     });
   }
 
-  async uploadToDraftBox(coverImage = null) {
+  async uploadToDraftBox(coverImage = null, digest = '') {
     const notice = new Notice('正在准备上传至微信公众号草稿箱...', 0);
     
     try {
@@ -643,7 +643,7 @@ class WeChatMPPublisher extends Plugin {
       }
       
       notice.setMessage('正在上传至微信公众号草稿箱...');
-      const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content, coverMediaId);
+      const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content, coverMediaId, digest);
       
       notice.hide();
       new Notice(`上传至草稿箱成功！草稿ID: ${draftResult.media_id}`, 10000);
