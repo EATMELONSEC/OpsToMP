@@ -667,91 +667,114 @@ function sanitizeHtml(html) {
 var themes = {
   default: {
     name: "\u9ED8\u8BA4",
-    primary: "#07C160",
-    background: "#ffffff",
-    text: "#333333",
-    secondary: "#f5f5f5",
-    border: "#e0e0e0",
+    h1: "#333333",
+    h2: "#333333",
+    h3: "#333333",
+    h4: "#333333",
+    h5: "#333333",
+    h6: "#333333",
     link: "#1AAD19",
-    linkHover: "rgba(26, 173, 25, 0.1)"
+    linkHover: "rgba(26, 173, 25, 0.1)",
+    primary: "#07C160"
   },
   simple: {
     name: "\u7B80\u7EA6",
-    primary: "#333333",
-    background: "#f5f5f5",
-    text: "#666666",
-    secondary: "#e8e8e8",
-    border: "#d0d0d0",
+    h1: "#333333",
+    h2: "#333333",
+    h3: "#333333",
+    h4: "#333333",
+    h5: "#333333",
+    h6: "#333333",
     link: "#333333",
-    linkHover: "rgba(51, 51, 51, 0.1)"
+    linkHover: "rgba(51, 51, 51, 0.1)",
+    primary: "#333333"
   },
   elegant: {
     name: "\u4F18\u96C5",
-    primary: "#8B4513",
-    background: "#FFF8DC",
-    text: "#2F4F4F",
-    secondary: "#F5DEB3",
-    border: "#DEB887",
+    h1: "#8B4513",
+    h2: "#8B4513",
+    h3: "#8B4513",
+    h4: "#8B4513",
+    h5: "#8B4513",
+    h6: "#8B4513",
     link: "#8B4513",
-    linkHover: "rgba(139, 69, 19, 0.1)"
+    linkHover: "rgba(139, 69, 19, 0.1)",
+    primary: "#8B4513"
   },
   tech: {
     name: "\u79D1\u6280",
-    primary: "#00BFFF",
-    background: "#1a1a2e",
-    text: "#e0e0e0",
-    secondary: "#2d2d44",
-    border: "#3d3d5c",
+    h1: "#00BFFF",
+    h2: "#00BFFF",
+    h3: "#00BFFF",
+    h4: "#00BFFF",
+    h5: "#00BFFF",
+    h6: "#00BFFF",
     link: "#00BFFF",
-    linkHover: "rgba(0, 191, 255, 0.1)"
+    linkHover: "rgba(0, 191, 255, 0.1)",
+    primary: "#00BFFF"
   },
   warm: {
     name: "\u6E29\u6696",
-    primary: "#FF6B6B",
-    background: "#FFF5EE",
-    text: "#4A4A4A",
-    secondary: "#FFE4E1",
-    border: "#FFD4D6",
+    h1: "#FF6B6B",
+    h2: "#FF6B6B",
+    h3: "#FF6B6B",
+    h4: "#FF6B6B",
+    h5: "#FF6B6B",
+    h6: "#FF6B6B",
     link: "#FF6B6B",
-    linkHover: "rgba(255, 107, 107, 0.1)"
+    linkHover: "rgba(255, 107, 107, 0.1)",
+    primary: "#FF6B6B"
   },
   fresh: {
     name: "\u6E05\u65B0",
-    primary: "#4ECDC4",
-    background: "#F0FFF4",
-    text: "#2D5A27",
-    secondary: "#CBF3F0",
-    border: "#95E1D3",
+    h1: "#4ECDC4",
+    h2: "#4ECDC4",
+    h3: "#4ECDC4",
+    h4: "#4ECDC4",
+    h5: "#4ECDC4",
+    h6: "#4ECDC4",
     link: "#4ECDC4",
-    linkHover: "rgba(78, 205, 196, 0.1)"
+    linkHover: "rgba(78, 205, 196, 0.1)",
+    primary: "#4ECDC4"
   },
   business: {
     name: "\u5546\u52A1",
-    primary: "#1E3A8A",
-    background: "#F8F9FA",
-    text: "#2C3E50",
-    secondary: "#E8ECF1",
-    border: "#BDC3C7",
+    h1: "#1E3A8A",
+    h2: "#1E3A8A",
+    h3: "#1E3A8A",
+    h4: "#1E3A8A",
+    h5: "#1E3A8A",
+    h6: "#1E3A8A",
     link: "#1E3A8A",
-    linkHover: "rgba(30, 58, 138, 0.1)"
+    linkHover: "rgba(30, 58, 138, 0.1)",
+    primary: "#1E3A8A"
   }
 };
 function applyTheme(container, themeName) {
   const theme = themes[themeName] || themes.default;
-  container.style.backgroundColor = theme.background;
-  container.style.color = theme.text;
-  const title = container.querySelector("h1");
-  if (title) {
-    title.style.color = theme.text;
-  }
-  const paragraphs = container.querySelectorAll("p");
-  paragraphs.forEach((p) => {
-    p.style.color = theme.text;
+  const h1s = container.querySelectorAll("h1");
+  h1s.forEach((h1) => {
+    h1.style.color = theme.h1;
   });
-  const headings = container.querySelectorAll("h1, h2, h3, h4");
-  headings.forEach((h) => {
-    h.style.color = theme.text;
-    h.style.borderBottomColor = theme.border;
+  const h2s = container.querySelectorAll("h2");
+  h2s.forEach((h2) => {
+    h2.style.color = theme.h2;
+  });
+  const h3s = container.querySelectorAll("h3");
+  h3s.forEach((h3) => {
+    h3.style.color = theme.h3;
+  });
+  const h4s = container.querySelectorAll("h4");
+  h4s.forEach((h4) => {
+    h4.style.color = theme.h4;
+  });
+  const h5s = container.querySelectorAll("h5");
+  h5s.forEach((h5) => {
+    h5.style.color = theme.h5;
+  });
+  const h6s = container.querySelectorAll("h6");
+  h6s.forEach((h6) => {
+    h6.style.color = theme.h6;
   });
   const links = container.querySelectorAll("a");
   links.forEach((a) => {
@@ -761,30 +784,6 @@ function applyTheme(container, themeName) {
   const blockquotes = container.querySelectorAll("blockquote");
   blockquotes.forEach((quote) => {
     quote.style.borderLeftColor = theme.primary;
-    quote.style.backgroundColor = theme.secondary;
-  });
-  const tables = container.querySelectorAll("table");
-  tables.forEach((table) => {
-    table.style.borderColor = theme.border;
-  });
-  const tableHeaders = container.querySelectorAll("th");
-  tableHeaders.forEach((th) => {
-    th.style.backgroundColor = theme.secondary;
-    th.style.color = theme.text;
-  });
-  const images = container.querySelectorAll("img");
-  images.forEach((img) => {
-    img.style.backgroundColor = theme.background;
-    img.style.borderColor = theme.border;
-  });
-  const codes = container.querySelectorAll("pre, code");
-  codes.forEach((code) => {
-    code.style.backgroundColor = theme.secondary;
-    code.style.borderColor = theme.border;
-  });
-  const hr = container.querySelectorAll("hr");
-  hr.forEach((line) => {
-    line.style.borderTopColor = theme.border;
   });
 }
 function processInternalLinks(htmlContent) {
@@ -866,7 +865,8 @@ async function processImagePaths(htmlContent, activeFile, app) {
   }
   return tempDiv.innerHTML;
 }
-function beautifyContentForWechat(htmlContent) {
+function beautifyContentForWechat(htmlContent, themeName = "default") {
+  const theme = themes[themeName] || themes.default;
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = htmlContent;
   tempDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
@@ -878,13 +878,14 @@ function beautifyContentForWechat(htmlContent) {
     p.style.margin = "0 0 18px 0";
     p.style.textIndent = "0";
     p.style.lineHeight = "1.8";
+    p.style.color = "#333";
   });
   const h1s = tempDiv.querySelectorAll("h1");
   h1s.forEach((h1) => {
     h1.style.margin = "30px 0 15px";
     h1.style.fontSize = "24px";
     h1.style.fontWeight = "700";
-    h1.style.color = "#333";
+    h1.style.color = theme.h1;
     h1.style.textAlign = "center";
     h1.style.lineHeight = "1.4";
   });
@@ -893,7 +894,7 @@ function beautifyContentForWechat(htmlContent) {
     h2.style.margin = "28px 0 12px";
     h2.style.fontSize = "20px";
     h2.style.fontWeight = "700";
-    h2.style.color = "#333";
+    h2.style.color = theme.h2;
     h2.style.borderBottom = "1px solid #eee";
     h2.style.paddingBottom = "8px";
   });
@@ -902,14 +903,14 @@ function beautifyContentForWechat(htmlContent) {
     h3.style.margin = "25px 0 10px";
     h3.style.fontSize = "18px";
     h3.style.fontWeight = "600";
-    h3.style.color = "#333";
+    h3.style.color = theme.h3;
   });
   const h4s = tempDiv.querySelectorAll("h4");
   h4s.forEach((h4) => {
     h4.style.margin = "20px 0 8px";
     h4.style.fontSize = "16px";
     h4.style.fontWeight = "600";
-    h4.style.color = "#333";
+    h4.style.color = theme.h4;
   });
   const images = tempDiv.querySelectorAll("img");
   images.forEach((img) => {
@@ -929,9 +930,9 @@ function beautifyContentForWechat(htmlContent) {
   });
   const links = tempDiv.querySelectorAll("a");
   links.forEach((a) => {
-    a.style.color = "#1AAD19";
+    a.style.color = theme.link;
     a.style.textDecoration = "none";
-    a.style.borderBottom = "1px solid rgba(26, 173, 25, 0.3)";
+    a.style.borderBottom = `1px solid ${theme.linkHover}`;
     a.target = "_blank";
   });
   const uls = tempDiv.querySelectorAll("ul");
@@ -975,7 +976,7 @@ function beautifyContentForWechat(htmlContent) {
   blockquotes.forEach((quote) => {
     quote.style.margin = "18px 0";
     quote.style.padding = "15px 20px";
-    quote.style.borderLeft = "4px solid #07C160";
+    quote.style.borderLeft = `4px solid ${theme.primary}`;
     quote.style.background = "#f9f9f9";
     quote.style.color = "#666";
     quote.style.fontSize = "15px";
@@ -1876,6 +1877,7 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
     });
   }
   async uploadToDraftBox(coverImage = null, digest = "") {
+    var _a;
     const notice = new import_obsidian4.Notice("\u6B63\u5728\u51C6\u5907\u4E0A\u4F20\u81F3\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F\u7BB1...", 0);
     try {
       if (!this.settings.appId || !this.settings.appSecret) {
@@ -1914,8 +1916,10 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       const accessToken = await this.api.getAccessToken();
       notice.setMessage("\u6B63\u5728\u5904\u7406\u6587\u6863\u4E2D\u7684\u56FE\u7247...");
       content = await processContentImages(content, accessToken, activeFile, this.api.uploadSingleImage.bind(this.api), this.app);
+      const sidebarView = (_a = this.app.workspace.getLeavesOfType("wechat-mp-publisher-sidebar")[0]) == null ? void 0 : _a.view;
+      const currentTheme = (sidebarView == null ? void 0 : sidebarView.currentTheme) || this.settings.defaultTheme || "default";
       notice.setMessage("\u6B63\u5728\u7F8E\u5316\u6587\u6863\u5185\u5BB9...");
-      content = beautifyContentForWechat(content);
+      content = beautifyContentForWechat(content, currentTheme);
       let coverMediaId = "";
       if (coverImage) {
         notice.setMessage("\u6B63\u5728\u4E0A\u4F20\u5C01\u9762\u56FE\u7247...");
@@ -1937,6 +1941,7 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
     }
   }
   async publishToWeChatMP() {
+    var _a;
     const notice = new import_obsidian4.Notice("\u6B63\u5728\u51C6\u5907\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7...", 0);
     try {
       if (!this.settings.appId || !this.settings.appSecret) {
@@ -1975,8 +1980,10 @@ var WeChatMPPublisher = class extends import_obsidian4.Plugin {
       const accessToken = await this.api.getAccessToken();
       notice.setMessage("\u6B63\u5728\u5904\u7406\u6587\u6863\u4E2D\u7684\u56FE\u7247...");
       content = await processContentImages(content, accessToken, activeFile, this.api.uploadSingleImage.bind(this.api), this.app);
+      const sidebarView = (_a = this.app.workspace.getLeavesOfType("wechat-mp-publisher-sidebar")[0]) == null ? void 0 : _a.view;
+      const currentTheme = (sidebarView == null ? void 0 : sidebarView.currentTheme) || this.settings.defaultTheme || "default";
       notice.setMessage("\u6B63\u5728\u7F8E\u5316\u6587\u6863\u5185\u5BB9...");
-      content = beautifyContentForWechat(content);
+      content = beautifyContentForWechat(content, currentTheme);
       notice.setMessage("\u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F...");
       const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content);
       notice.setMessage("\u6B63\u5728\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7...");

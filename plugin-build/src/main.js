@@ -636,8 +636,11 @@ class WeChatMPPublisher extends Plugin {
       notice.setMessage('正在处理文档中的图片...');
       content = await processContentImages(content, accessToken, activeFile, this.api.uploadSingleImage.bind(this.api), this.app);
       
+      const sidebarView = this.app.workspace.getLeavesOfType('wechat-mp-publisher-sidebar')[0]?.view;
+      const currentTheme = sidebarView?.currentTheme || this.settings.defaultTheme || 'default';
+      
       notice.setMessage('正在美化文档内容...');
-      content = beautifyContentForWechat(content);
+      content = beautifyContentForWechat(content, currentTheme);
       
       let coverMediaId = '';
       if (coverImage) {
@@ -715,8 +718,11 @@ class WeChatMPPublisher extends Plugin {
       notice.setMessage('正在处理文档中的图片...');
       content = await processContentImages(content, accessToken, activeFile, this.api.uploadSingleImage.bind(this.api), this.app);
       
+      const sidebarView = this.app.workspace.getLeavesOfType('wechat-mp-publisher-sidebar')[0]?.view;
+      const currentTheme = sidebarView?.currentTheme || this.settings.defaultTheme || 'default';
+      
       notice.setMessage('正在美化文档内容...');
-      content = beautifyContentForWechat(content);
+      content = beautifyContentForWechat(content, currentTheme);
       
       notice.setMessage('正在创建微信公众号草稿...');
       const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content);
