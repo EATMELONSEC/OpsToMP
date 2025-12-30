@@ -517,7 +517,7 @@ var WeChatMPAPI = class {
       });
       if (response.errcode) {
         if (response.errcode === 48001) {
-          throw new Error('\u516C\u4F17\u53F7\u672A\u6388\u6743\u4F7F\u7528\u6B64\u63A5\u53E3\u3002\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u5E73\u53F0\uFF08\u516C\u4F17\u5E73\u53F0\u5B98\u7F51 - \u5F00\u53D1\u8005\u4E2D\u5FC3\uFF09\u5F00\u542F"\u53D1\u5E03\u80FD\u529B"\u76F8\u5173\u6743\u9650\u3002');
+          throw new Error("\u516C\u4F17\u53F7\u672A\u6388\u6743\u4F7F\u7528\u6B64\u63A5\u53E3\u3002");
         }
         throw new Error(`\u83B7\u53D6\u5DF2\u53D1\u5E03\u6587\u7AE0\u5931\u8D25: ${response.errmsg}`);
       }
@@ -1691,7 +1691,12 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
       });
     } catch (error) {
       loadingEl.remove();
-      const errorEl = container.createEl("div", { text: `\u52A0\u8F7D\u5931\u8D25: ${error.message}` });
+      let errorMessage = error.message;
+      if (errorMessage.includes("api unauthorized") || errorMessage.includes("48001") || errorMessage.includes("\u672A\u6388\u6743")) {
+        errorMessage += "<br><br>\u5185\u5BB9\u7BA1\u7406\u529F\u80FD\u9700\u8981\u516C\u4F17\u53F7\u5B8C\u6210\u4E2A\u4EBA\u8BA4\u8BC1\u3002\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u5E73\u53F0\u5B8C\u6210\u8BA4\u8BC1\u540E\u518D\u8BD5\u3002";
+      }
+      const errorEl = container.createEl("div");
+      errorEl.innerHTML = `\u52A0\u8F7D\u5931\u8D25: ${errorMessage}`;
       errorEl.style.textAlign = "center";
       errorEl.style.padding = "20px";
       errorEl.style.color = "var(--text-error)";
@@ -1837,7 +1842,12 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
       });
     } catch (error) {
       loadingEl.remove();
-      const errorEl = container.createEl("div", { text: `\u52A0\u8F7D\u5931\u8D25: ${error.message}` });
+      let errorMessage = error.message;
+      if (errorMessage.includes("api unauthorized") || errorMessage.includes("48001") || errorMessage.includes("\u672A\u6388\u6743")) {
+        errorMessage += "<br><br>\u5185\u5BB9\u7BA1\u7406\u529F\u80FD\u9700\u8981\u516C\u4F17\u53F7\u5B8C\u6210\u4E2A\u4EBA\u8BA4\u8BC1\u3002\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u5E73\u53F0\u5B8C\u6210\u8BA4\u8BC1\u540E\u518D\u8BD5\u3002";
+      }
+      const errorEl = container.createEl("div");
+      errorEl.innerHTML = `\u52A0\u8F7D\u5931\u8D25: ${errorMessage}`;
       errorEl.style.textAlign = "center";
       errorEl.style.padding = "20px";
       errorEl.style.color = "var(--text-error)";

@@ -548,7 +548,7 @@ export class WeChatMPAPI {
       
       if (response.errcode) {
         if (response.errcode === 48001) {
-          throw new Error('公众号未授权使用此接口。请前往微信公众平台（公众平台官网 - 开发者中心）开启"发布能力"相关权限。');
+          throw new Error('公众号未授权使用此接口。');
         }
         throw new Error(`获取已发布文章失败: ${response.errmsg}`);
       }

@@ -32,6 +32,9 @@ MdToMp provides a complete solution to help users convert and publish Markdown n
 - 🎨 **样式美化**：自动应用微信公众号风格的样式
 - 🔒 **安全防护**：内置XSS防护，过滤危险标签和属性
 - 🌐 **网络测试**：测试网络连接和API密钥有效性
+- ✨ **一键排版**：支持多种排版选项，包括段落间距、标题格式、图片优化、引用样式、代码块美化、列表格式优化、取消多余换行
+- 📋 **内容管理**：查看和管理草稿箱、已发布文章列表
+- 🗑️ **删除功能**：删除草稿或已发布文章
 
 - 📝 **Markdown to HTML**: Convert Markdown format to WeChat Official Account compatible HTML
 - 👁️ **Real-time Preview**: Preview WeChat Official Account rendering effects in Obsidian
@@ -41,6 +44,9 @@ MdToMp provides a complete solution to help users convert and publish Markdown n
 - 🎨 **Style Beautification**: Automatically apply WeChat Official Account style
 - 🔒 **Security Protection**: Built-in XSS protection, filtering dangerous tags and attributes
 - 🌐 **Network Testing**: Test network connection and API key validity
+- ✨ **One-Click Formatting**: Support multiple formatting options including paragraph spacing, heading unification, image optimization, quote styling, code block beautification, list formatting, and removing extra line breaks
+- 📋 **Content Management**: View and manage drafts and published articles lists
+- 🗑️ **Delete Function**: Delete drafts or published articles
 
 ### Python工具功能 / Python Tools Features
 
@@ -188,6 +194,37 @@ python obsidian_to_mp.py --appid YOUR_APPID --secret YOUR_SECRET your_note.md
 
 - 点击"测试网络连接"按钮测试网络连通性 / Click "Test Network Connection" button to test network connectivity
 - 点击"测试API密钥"按钮验证微信公众号凭证 / Click "Test API Keys" button to verify WeChat Official Account credentials
+
+#### 一键排版 / One-Click Formatting
+
+1. 勾选"启用一键排版"复选框 / Check "Enable One-Click Formatting" checkbox
+2. 根据需要选择排版选项 / Select formatting options as needed:
+   - **自动添加段落间距**：统一段落间距 / Auto paragraph spacing: Unify paragraph spacing
+   - **统一标题格式**：标准化各级标题样式 / Unify headings: Standardize heading styles
+   - **优化图片显示**：图片居中、圆角、阴影 / Optimize images: Center images, add rounded corners and shadows
+   - **添加引用样式**：美化引用块 / Quote styling: Beautify quote blocks
+   - **代码块美化**：美化代码块和行内代码 / Code block beautification: Beautify code blocks and inline code
+   - **列表格式优化**：统一列表缩进和间距 / List formatting: Unify list indentation and spacing
+   - **取消多余换行**：移除多余的空行，段落间最多空一行 / Remove extra breaks: Remove extra blank lines, max one blank line between paragraphs
+3. 点击"预览当前文档"或"上传至草稿箱"查看效果 / Click "Preview Current Document" or "Upload to Drafts" to see the effect
+
+#### 内容管理 / Content Management
+
+##### 查看草稿列表 / View Draft List
+
+1. 点击侧边栏中的"查看草稿列表"按钮 / Click "View Draft List" button in the sidebar
+2. 查看所有草稿及其状态 / View all drafts and their status
+3. 点击草稿卡片查看详情 / Click draft card to view details
+4. 点击"删除"按钮删除草稿 / Click "Delete" button to delete draft
+
+##### 查看已发布文章 / View Published Articles
+
+1. 点击侧边栏中的"查看已发布文章"按钮 / Click "View Published Articles" button in the sidebar
+2. 查看所有已发布文章及其状态 / View all published articles and their status
+3. 点击文章卡片查看详情 / Click article card to view details
+4. 点击"删除"按钮删除已发布文章 / Click "Delete" button to delete published article
+
+**注意**：内容管理功能需要公众号完成个人认证。如果出现权限错误，请前往微信公众平台完成认证。/ **Note**: Content management features require WeChat Official Account personal authentication. If permission errors occur, please complete authentication on the WeChat Official Account Platform.
 
 ### Python工具使用 / Python Tools Usage
 
@@ -395,6 +432,30 @@ A: 请检查 / Please check:
 ---
 
 ## 更新日志 / Changelog
+
+### v1.1.0 (2025-12-30)
+
+#### Obsidian插件 / Obsidian Plugin
+
+- ✨ 新增一键排版功能 / Add one-click formatting feature
+  - 支持自动添加段落间距 / Support auto paragraph spacing
+  - 支持统一标题格式 / Support unify headings
+  - 支持优化图片显示 / Support optimize images
+  - 支持添加引用样式 / Support quote styling
+  - 支持代码块美化 / Support code block beautification
+  - 支持列表格式优化 / Support list formatting
+  - 支持取消多余换行 / Support remove extra breaks
+- ✨ 新增内容管理功能 / Add content management features
+  - 查看草稿列表 / View draft list
+  - 查看已发布文章列表 / View published articles list
+  - 删除草稿 / Delete drafts
+  - 删除已发布文章 / Delete published articles
+- 🐛 修复内容管理权限错误提示 / Fix content management permission error message
+  - 添加个人认证说明 / Add personal authentication explanation
+
+#### Python工具 / Python Tools
+
+- 无更新 / No changes
 
 ### v1.0.0 (2025-12-30)
 

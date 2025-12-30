@@ -486,7 +486,12 @@ export class PublisherSidebarView extends ItemView {
 
     } catch (error) {
       loadingEl.remove();
-      const errorEl = container.createEl('div', { text: `加载失败: ${error.message}` });
+      let errorMessage = error.message;
+      if (errorMessage.includes('api unauthorized') || errorMessage.includes('48001') || errorMessage.includes('未授权')) {
+        errorMessage += '<br><br>内容管理功能需要公众号完成个人认证。请前往微信公众平台完成认证后再试。';
+      }
+      const errorEl = container.createEl('div');
+      errorEl.innerHTML = `加载失败: ${errorMessage}`;
       errorEl.style.textAlign = 'center';
       errorEl.style.padding = '20px';
       errorEl.style.color = 'var(--text-error)';
@@ -656,7 +661,12 @@ export class PublisherSidebarView extends ItemView {
 
     } catch (error) {
       loadingEl.remove();
-      const errorEl = container.createEl('div', { text: `加载失败: ${error.message}` });
+      let errorMessage = error.message;
+      if (errorMessage.includes('api unauthorized') || errorMessage.includes('48001') || errorMessage.includes('未授权')) {
+        errorMessage += '<br><br>内容管理功能需要公众号完成个人认证。请前往微信公众平台完成认证后再试。';
+      }
+      const errorEl = container.createEl('div');
+      errorEl.innerHTML = `加载失败: ${errorMessage}`;
       errorEl.style.textAlign = 'center';
       errorEl.style.padding = '20px';
       errorEl.style.color = 'var(--text-error)';
