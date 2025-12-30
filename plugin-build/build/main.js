@@ -1021,6 +1021,12 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
     this.currentView = "main";
     this.digest = "";
     this.currentTheme = "default";
+    this.draftPage = {
+      currentPage: 0,
+      pageSize: 5,
+      totalItems: 0,
+      totalPages: 0
+    };
   }
   getViewType() {
     return "wechat-mp-publisher-sidebar";
@@ -1160,6 +1166,7 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
     draftListButton.style.marginBottom = "10px";
     draftListButton.style.padding = "8px";
     draftListButton.addEventListener("click", async () => {
+      this.draftPage.currentPage = 0;
       await this.loadDraftList();
     });
     const networkTestSection = container.createEl("div");
@@ -1209,11 +1216,15 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
     this.currentView = "drafts";
     const container = this.contentEl;
     container.empty();
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.height = "100%";
     const header = container.createEl("div");
     header.style.display = "flex";
     header.style.justifyContent = "space-between";
     header.style.alignItems = "center";
     header.style.marginBottom = "15px";
+    header.style.flexShrink = "0";
     const titleEl = header.createEl("h2", { text: "\u8349\u7A3F\u5217\u8868" });
     titleEl.style.margin = "0";
     const backButton = header.createEl("button", { text: "\u2190 \u8FD4\u56DE" });
@@ -1227,48 +1238,63 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
     loadingEl.style.color = "var(--text-muted)";
     try {
       const accessToken = await this.plugin.api.getAccessToken();
-      const result = await this.plugin.api.getDraftList(accessToken, 0, 20, 1);
+      const offset = this.draftPage.currentPage * this.draftPage.pageSize;
+      const result = await this.plugin.api.getDraftList(accessToken, offset, this.draftPage.pageSize, 1);
       this.drafts = result.item || [];
+      this.draftPage.totalItems = result.total_count || 0;
+      this.draftPage.totalPages = Math.ceil(this.draftPage.totalItems / this.draftPage.pageSize);
       loadingEl.remove();
       if (this.drafts.length === 0) {
         const emptyEl = container.createEl("div", { text: "\u6682\u65E0\u8349\u7A3F" });
         emptyEl.style.textAlign = "center";
         emptyEl.style.padding = "20px";
         emptyEl.style.color = "var(--text-muted)";
+        if (this.draftPage.currentPage > 0) {
+          const backToFirstButton = container.createEl("button", { text: "\u8FD4\u56DE\u7B2C\u4E00\u9875" });
+          backToFirstButton.style.display = "block";
+          backToFirstButton.style.margin = "10px auto";
+          backToFirstButton.addEventListener("click", () => {
+            this.draftPage.currentPage = 0;
+            this.loadDraftList();
+          });
+        }
         return;
       }
       const listContainer = container.createEl("div");
-      listContainer.style.maxHeight = "400px";
+      listContainer.style.flex = "1";
       listContainer.style.overflowY = "auto";
+      listContainer.style.minHeight = "0";
       this.drafts.forEach((draft, index) => {
         const article = draft.content.news_item[0];
         const draftItem = listContainer.createEl("div");
         draftItem.style.border = "1px solid var(--background-modifier-border)";
         draftItem.style.borderRadius = "4px";
-        draftItem.style.padding = "12px";
-        draftItem.style.marginBottom = "10px";
+        draftItem.style.padding = "10px";
+        draftItem.style.marginBottom = "8px";
         draftItem.style.backgroundColor = "var(--background-secondary)";
         const draftTitle = draftItem.createEl("h4", { text: article.title });
-        draftTitle.style.margin = "0 0 8px 0";
-        draftTitle.style.fontSize = "14px";
+        draftTitle.style.margin = "0 0 6px 0";
+        draftTitle.style.fontSize = "13px";
         draftTitle.style.fontWeight = "600";
+        draftTitle.style.lineHeight = "1.4";
         const draftMeta = draftItem.createEl("div");
-        draftMeta.style.fontSize = "12px";
+        draftMeta.style.fontSize = "11px";
         draftMeta.style.color = "var(--text-muted)";
-        draftMeta.style.marginBottom = "8px";
+        draftMeta.style.marginBottom = "6px";
         draftMeta.textContent = `ID: ${article.thumb_media_id || draft.media_id}`;
         const actions = draftItem.createEl("div");
         actions.style.display = "flex";
-        actions.style.gap = "8px";
+        actions.style.gap = "6px";
         const publishButton = actions.createEl("button", { text: "\u53D1\u5E03" });
         publishButton.style.flex = "1";
-        publishButton.style.padding = "4px 8px";
-        publishButton.style.fontSize = "12px";
+        publishButton.style.padding = "3px 6px";
+        publishButton.style.fontSize = "11px";
         publishButton.addEventListener("click", async () => {
           if (confirm(`\u786E\u5B9A\u8981\u53D1\u5E03\u8349\u7A3F"${article.title}"\u5417\uFF1F`)) {
             try {
               const publishResult = await this.plugin.api.publishDraft(accessToken, draft.media_id);
               new import_obsidian2.Notice(`\u53D1\u5E03\u6210\u529F\uFF01\u6587\u7AE0ID: ${publishResult.publish_id}`, 5e3);
+              this.draftPage.currentPage = 0;
               await this.loadDraftList();
             } catch (error) {
               new import_obsidian2.Notice(`\u53D1\u5E03\u5931\u8D25: ${error.message}`, 5e3);
@@ -1277,8 +1303,8 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
         });
         const deleteButton = actions.createEl("button", { text: "\u5220\u9664" });
         deleteButton.style.flex = "1";
-        deleteButton.style.padding = "4px 8px";
-        deleteButton.style.fontSize = "12px";
+        deleteButton.style.padding = "3px 6px";
+        deleteButton.style.fontSize = "11px";
         deleteButton.style.backgroundColor = "var(--interactive-danger)";
         deleteButton.style.color = "var(--text-on-accent)";
         deleteButton.addEventListener("click", async () => {
@@ -1286,6 +1312,7 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
             try {
               await this.plugin.api.deleteDraft(accessToken, draft.media_id);
               new import_obsidian2.Notice("\u5220\u9664\u6210\u529F", 3e3);
+              this.draftPage.currentPage = 0;
               await this.loadDraftList();
             } catch (error) {
               new import_obsidian2.Notice(`\u5220\u9664\u5931\u8D25: ${error.message}`, 5e3);
@@ -1293,12 +1320,45 @@ var PublisherSidebarView = class extends import_obsidian2.ItemView {
           }
         });
       });
-      const totalCount = container.createEl("div");
-      totalCount.style.marginTop = "10px";
-      totalCount.style.fontSize = "12px";
-      totalCount.style.color = "var(--text-muted)";
-      totalCount.style.textAlign = "center";
-      totalCount.textContent = `\u5171 ${this.drafts.length} \u4E2A\u8349\u7A3F`;
+      const paginationContainer = container.createEl("div");
+      paginationContainer.style.marginTop = "10px";
+      paginationContainer.style.paddingTop = "10px";
+      paginationContainer.style.borderTop = "1px solid var(--background-modifier-border)";
+      paginationContainer.style.flexShrink = "0";
+      const pageInfo = paginationContainer.createEl("div");
+      pageInfo.style.textAlign = "center";
+      pageInfo.style.fontSize = "12px";
+      pageInfo.style.color = "var(--text-muted)";
+      pageInfo.style.marginBottom = "8px";
+      pageInfo.textContent = `\u7B2C ${this.draftPage.currentPage + 1} / ${this.draftPage.totalPages} \u9875\uFF0C\u5171 ${this.draftPage.totalItems} \u4E2A\u8349\u7A3F`;
+      const paginationButtons = paginationContainer.createEl("div");
+      paginationButtons.style.display = "flex";
+      paginationButtons.style.justifyContent = "center";
+      paginationButtons.style.gap = "8px";
+      const prevButton = paginationButtons.createEl("button", { text: "\u4E0A\u4E00\u9875" });
+      prevButton.style.flex = "1";
+      prevButton.style.padding = "5px 10px";
+      prevButton.style.fontSize = "12px";
+      prevButton.disabled = this.draftPage.currentPage === 0;
+      prevButton.style.opacity = this.draftPage.currentPage === 0 ? "0.5" : "1";
+      prevButton.addEventListener("click", () => {
+        if (this.draftPage.currentPage > 0) {
+          this.draftPage.currentPage--;
+          this.loadDraftList();
+        }
+      });
+      const nextButton = paginationButtons.createEl("button", { text: "\u4E0B\u4E00\u9875" });
+      nextButton.style.flex = "1";
+      nextButton.style.padding = "5px 10px";
+      nextButton.style.fontSize = "12px";
+      nextButton.disabled = this.draftPage.currentPage >= this.draftPage.totalPages - 1;
+      nextButton.style.opacity = this.draftPage.currentPage >= this.draftPage.totalPages - 1 ? "0.5" : "1";
+      nextButton.addEventListener("click", () => {
+        if (this.draftPage.currentPage < this.draftPage.totalPages - 1) {
+          this.draftPage.currentPage++;
+          this.loadDraftList();
+        }
+      });
     } catch (error) {
       loadingEl.remove();
       const errorEl = container.createEl("div", { text: `\u52A0\u8F7D\u5931\u8D25: ${error.message}` });
