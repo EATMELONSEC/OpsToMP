@@ -23,6 +23,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
@@ -38,179 +42,18 @@ __export(main_exports, {
   default: () => main_default
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian = require("obsidian");
-var import_https = __toESM(require("https"));
+var import_obsidian4 = require("obsidian");
+var import_https2 = __toESM(require("https"));
 var import_http = __toESM(require("http"));
-var WeChatMPPublisher = class extends import_obsidian.Plugin {
-  constructor() {
-    super(...arguments);
-    __publicField(this, "settings", {
-      timeout: 3e4,
-      networkTestUrl: "http://baidu.com",
-      appId: "",
-      appSecret: "",
-      accessToken: "",
-      accessTokenExpire: 0
-    });
+
+// src/api.js
+var import_https = __toESM(require("https"));
+var WeChatMPAPI = class {
+  constructor(settings) {
+    this.settings = settings;
   }
-  async onload() {
-    console.log("\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u63D2\u4EF6\u5DF2\u52A0\u8F7D");
-    window.plugin = this;
-    this.registerView(
-      "wechat-mp-publisher-sidebar",
-      (leaf) => new PublisherSidebarView(leaf, this)
-    );
-    await this.loadSettings();
-    this.addRibbonIcon("paper-plane", "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F", async () => {
-      try {
-        await this.openPublisherSidebar();
-      } catch (error) {
-        console.error("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25:", error);
-        new import_obsidian.Notice("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u65E5\u5FD7", 5e3);
-      }
-    });
-    this.addCommand({
-      id: "open-wechat-mp-publisher",
-      name: "\u6253\u5F00\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F",
-      callback: async () => {
-        try {
-          await this.openPublisherSidebar();
-        } catch (error) {
-          console.error("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25:", error);
-          new import_obsidian.Notice("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u65E5\u5FD7", 5e3);
-        }
-      }
-    });
-    this.addCommand({
-      id: "publish-to-wechat-mp",
-      name: "\u76F4\u63A5\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7",
-      callback: async () => {
-        try {
-          await this.publishToWeChatMP();
-        } catch (error) {
-          console.error("\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7\u5931\u8D25:", error);
-        }
-      }
-    });
-    this.addSettingTab(new NetworkTestSettingsTab(this.app, this));
-  }
-  async openPublisherSidebar() {
-    const existingLeaves = this.app.workspace.getLeavesOfType("wechat-mp-publisher-sidebar");
-    if (existingLeaves.length > 0) {
-      const publisherLeaf = existingLeaves[0];
-      const isActive = this.app.workspace.getActiveViewOfType(PublisherSidebarView) !== null;
-      if (isActive) {
-        publisherLeaf.detach();
-        return;
-      } else {
-        this.app.workspace.revealLeaf(publisherLeaf);
-        return;
-      }
-    }
-    const leaf = this.app.workspace.getRightLeaf(false);
-    await leaf.setViewState({
-      type: "wechat-mp-publisher-sidebar"
-    });
-  }
-  async onunload() {
-    this.app.workspace.getLeavesOfType("wechat-mp-publisher-sidebar").forEach((leaf) => leaf.detach());
-    console.log("\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u63D2\u4EF6\u5DF2\u5378\u8F7D\uFF0C\u81EA\u5B9A\u4E49\u89C6\u56FE\u5DF2\u6E05\u7406");
-  }
-  async loadSettings() {
-    this.settings = Object.assign({}, {
-      timeout: 5e3,
-      networkTestUrl: "http://baidu.com",
-      appId: "",
-      appSecret: "",
-      accessToken: "",
-      accessTokenExpire: 0
-    }, await this.loadData());
-  }
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
-  async testNetworkConnection(testUrl = "http://baidu.com") {
-    const notice = new import_obsidian.Notice("\u6B63\u5728\u6D4B\u8BD5\u7F51\u7EDC\u8FDE\u63A5...", 0);
-    try {
-      notice.setMessage(`\u6B63\u5728\u8BBF\u95EE${testUrl}...`);
-      const protocol = testUrl.startsWith("https") ? import_https.default : import_http.default;
-      const response = await new Promise((resolve, reject) => {
-        const req = protocol.get(testUrl, {
-          timeout: this.settings.timeout
-        }, (res) => {
-          let data = "";
-          res.on("data", (chunk) => {
-            data += chunk;
-          });
-          res.on("end", () => {
-            resolve({
-              status: res.statusCode,
-              data
-            });
-          });
-        });
-        req.on("error", (err) => {
-          reject(err);
-        });
-        req.on("timeout", () => {
-          req.destroy();
-          reject(new Error("\u8BF7\u6C42\u8D85\u65F6"));
-        });
-      });
-      const successMsg = `\u7F51\u7EDC\u8FDE\u63A5\u6D4B\u8BD5\u6210\u529F: \u6210\u529F\u8BBF\u95EE${testUrl}\uFF0CHTTP\u72B6\u6001\u7801: ${response.status}`;
-      notice.hide();
-      new import_obsidian.Notice(successMsg, 1e4);
-      console.log(successMsg);
-      const responseText = response.data.substring(0, 100) + "...";
-      console.log(`${testUrl}\u54CD\u5E94\u5185\u5BB9:`, responseText);
-      return { success: true, message: successMsg };
-    } catch (error) {
-      let errorMsg = "\u7F51\u7EDC\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25";
-      if (error.code) {
-        errorMsg += `: \u9519\u8BEF\u7801 ${error.code}`;
-      }
-      if (error.message) {
-        errorMsg += `: ${error.message}`;
-      }
-      errorMsg += `
-\u8BF7\u6C42URL: ${testUrl}`;
-      errorMsg += `
-\u8D85\u65F6\u65F6\u95F4: ${this.settings.timeout}ms`;
-      errorMsg += "\n\n\u53EF\u80FD\u7684\u89E3\u51B3\u65B9\u6848\uFF1A\n";
-      errorMsg += "1. \u68C0\u67E5\u76EE\u6807\u670D\u52A1\u5668\u662F\u5426\u5728\u8FD0\u884C\n";
-      errorMsg += "2. \u68C0\u67E5URL\u662F\u5426\u6B63\u786E\n";
-      errorMsg += "3. \u68C0\u67E5\u672C\u5730\u7F51\u7EDC\u662F\u5426\u6B63\u5E38\n";
-      errorMsg += "4. \u5C1D\u8BD5\u4ECE\u6D4F\u89C8\u5668\u76F4\u63A5\u8BBF\u95EE\u8BE5\u5730\u5740\n";
-      errorMsg += "5. \u68C0\u67E5\u662F\u5426\u6709\u5176\u4ED6\u7F51\u7EDC\u5B89\u5168\u8F6F\u4EF6\u963B\u6B62\u8FDE\u63A5\n";
-      notice.hide();
-      new import_obsidian.Notice(errorMsg, 15e3);
-      console.error("\u7F51\u7EDC\u6D4B\u8BD5\u8BE6\u7EC6\u9519\u8BEF:", error);
-      return { success: false, message: errorMsg };
-    }
-  }
-  async testAPIKeys() {
-    const notice = new import_obsidian.Notice("\u6B63\u5728\u6D4B\u8BD5\u5FAE\u4FE1\u516C\u4F17\u53F7API\u5BC6\u94A5...", 0);
-    try {
-      if (!this.settings.appId || !this.settings.appSecret) {
-        throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7AppID\u548CAppSecret");
-      }
-      notice.setMessage("\u6B63\u5728\u9A8C\u8BC1API\u5BC6\u94A5...");
-      const accessToken = await this.getAccessToken();
-      notice.hide();
-      const successMsg = `API\u5BC6\u94A5\u6D4B\u8BD5\u6210\u529F\uFF01\u83B7\u53D6\u5230access_token: ${accessToken.substring(0, 20)}...`;
-      new import_obsidian.Notice(successMsg, 1e4);
-      console.log(successMsg);
-      return { success: true, message: successMsg };
-    } catch (error) {
-      let errorMsg = "API\u5BC6\u94A5\u6D4B\u8BD5\u5931\u8D25";
-      if (error.message) {
-        errorMsg += `: ${error.message}`;
-      }
-      notice.hide();
-      new import_obsidian.Notice(errorMsg, 15e3);
-      console.error("API\u6D4B\u8BD5\u8BE6\u7EC6\u9519\u8BEF:", error);
-      return { success: false, message: errorMsg };
-    }
+  updateSettings(settings) {
+    this.settings = settings;
   }
   async getAccessToken() {
     const now = Date.now();
@@ -243,7 +86,6 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
       if (response.access_token) {
         this.settings.accessToken = response.access_token;
         this.settings.accessTokenExpire = now + (response.expires_in - 300) * 1e3;
-        await this.saveSettings();
         return response.access_token;
       } else {
         throw new Error(`\u83B7\u53D6access_token\u5931\u8D25: ${response.errmsg || "\u672A\u77E5\u9519\u8BEF"}`);
@@ -412,388 +254,6 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
       }
     });
   }
-  escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
-  sanitizeHtml(html) {
-    console.log("sanitizeHtml \u88AB\u8C03\u7528\uFF0C\u8F93\u5165\u5185\u5BB9\uFF08\u524D200\u5B57\u7B26\uFF09:", html.substring(0, 200));
-    if (!html)
-      return "";
-    const tempDiv = document.createElement("div");
-    const decoderDiv = document.createElement("div");
-    decoderDiv.textContent = html;
-    const decodedHtml = decoderDiv.innerHTML;
-    console.log("\u89E3\u7801\u540E\u7684\u5185\u5BB9\uFF08\u524D200\u5B57\u7B26\uFF09:", decodedHtml.substring(0, 200));
-    if (decodedHtml !== html) {
-      console.log("\u68C0\u6D4B\u5230HTML\u5B9E\u4F53\u7F16\u7801\uFF0C\u4F7F\u7528\u89E3\u7801\u540E\u7684\u5185\u5BB9");
-      html = decodedHtml;
-    } else {
-      console.log("\u672A\u68C0\u6D4B\u5230HTML\u5B9E\u4F53\u7F16\u7801\uFF0C\u4F7F\u7528\u539F\u5185\u5BB9");
-    }
-    tempDiv.innerHTML = html;
-    const allowedTags = /* @__PURE__ */ new Set([
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "p",
-      "br",
-      "hr",
-      "strong",
-      "em",
-      "u",
-      "s",
-      "b",
-      "i",
-      "ul",
-      "ol",
-      "li",
-      "pre",
-      "code",
-      "kbd",
-      "a",
-      "img",
-      "table",
-      "thead",
-      "tbody",
-      "tr",
-      "th",
-      "td",
-      "blockquote",
-      "span",
-      "div",
-      "input",
-      "label",
-      "sup",
-      "sub"
-    ]);
-    const allowedAttributes = /* @__PURE__ */ new Set([
-      "src",
-      "alt",
-      "title",
-      "width",
-      "height",
-      "href",
-      "target",
-      "rel",
-      "class",
-      "id",
-      "style",
-      "colspan",
-      "rowspan",
-      "type",
-      "checked",
-      "disabled",
-      "name",
-      "value",
-      "for",
-      "data-line",
-      "data-source"
-    ]);
-    const allowedStyles = /* @__PURE__ */ new Set([
-      "color",
-      "background-color",
-      "font-size",
-      "font-weight",
-      "text-align",
-      "margin",
-      "padding",
-      "line-height",
-      "width",
-      "height",
-      "border",
-      "border-radius",
-      "display",
-      "text-indent",
-      "font-family",
-      "font-style",
-      "text-decoration",
-      "white-space",
-      "overflow",
-      "overflow-x",
-      "overflow-y",
-      "position",
-      "top",
-      "right",
-      "bottom",
-      "left",
-      "float",
-      "clear",
-      "vertical-align",
-      "background",
-      "background-image",
-      "background-repeat",
-      "background-position",
-      "background-size",
-      "box-shadow",
-      "text-shadow",
-      "opacity",
-      "transform",
-      "transition",
-      "animation"
-    ]);
-    const isSafeUrl = (url) => {
-      if (!url || typeof url !== "string")
-        return false;
-      try {
-        const parsedUrl = new URL(url, "http://example.com");
-        return ["http:", "https:", "app:", "file:"].includes(parsedUrl.protocol);
-      } catch (e) {
-        return false;
-      }
-    };
-    const processElement = (element) => {
-      if (!allowedTags.has(element.tagName.toLowerCase())) {
-        const textNode = document.createTextNode(element.textContent);
-        element.parentNode.replaceChild(textNode, element);
-        return;
-      }
-      Array.from(element.attributes).forEach((attr) => {
-        const attrName = attr.name.toLowerCase();
-        const attrValue = attr.value;
-        if (attrName.startsWith("data-")) {
-          return;
-        }
-        if (!allowedAttributes.has(attrName)) {
-          element.removeAttribute(attr.name);
-        } else if (attrName === "href" || attrName === "src") {
-          if (!isSafeUrl(attrValue)) {
-            element.setAttribute(attr.name, attrName === "href" ? "#" : "");
-          } else if (attrName === "href") {
-            element.setAttribute("target", "_blank");
-            element.setAttribute("rel", "noopener noreferrer");
-          }
-        } else if (attrName === "style") {
-          const styleDeclarations = attrValue.split(";");
-          const safeStyles = [];
-          styleDeclarations.forEach((declaration) => {
-            const parts = declaration.split(":").map((part) => part.trim());
-            if (parts.length === 2) {
-              const [property, value] = parts;
-              if (allowedStyles.has(property.toLowerCase())) {
-                safeStyles.push(`${property}: ${value}`);
-              }
-            }
-          });
-          if (safeStyles.length > 0) {
-            element.setAttribute("style", safeStyles.join("; "));
-          } else {
-            element.removeAttribute("style");
-          }
-        } else if (attrName === "class") {
-          element.setAttribute(attr.name, attrValue);
-        } else if (attrName === "id") {
-          element.setAttribute(attr.name, attrValue);
-        } else {
-          element.setAttribute(attr.name, this.escapeHtml(attrValue));
-        }
-      });
-      Array.from(element.childNodes).forEach((child) => {
-        if (child.nodeType === 1) {
-          processElement(child);
-        }
-      });
-    };
-    Array.from(tempDiv.childNodes).forEach((child) => {
-      if (child.nodeType === 1) {
-        processElement(child);
-      }
-    });
-    return tempDiv.innerHTML;
-  }
-  processInternalLinks(htmlContent) {
-    const internalImageRegex = /!\[\[(.*?)\]\]/g;
-    return htmlContent.replace(internalImageRegex, (match, imagePath) => {
-      const cleanPath = imagePath.split("|")[0].trim();
-      return `<img src="${cleanPath}" alt="${cleanPath}">`;
-    });
-  }
-  async processContentImages(htmlContent, accessToken, activeFile) {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlContent;
-    const images = tempDiv.querySelectorAll("img");
-    for (const img of images) {
-      let src = img.getAttribute("src");
-      if (!src)
-        continue;
-      if (!src.startsWith("http://") && !src.startsWith("https://")) {
-        try {
-          let file;
-          if (src.startsWith("app://local/")) {
-            const localPath = decodeURIComponent(src.replace("app://local/", ""));
-            file = this.app.vault.getAbstractFileByPath(localPath);
-          } else if (src.startsWith("file:///")) {
-            const localPath = decodeURIComponent(src.replace("file:///", ""));
-            const files = this.app.vault.getAllFiles();
-            file = files.find((f) => f.path === localPath || f.path.endsWith(localPath));
-          } else {
-            file = this.app.metadataCache.getFirstLinkpathDest(src, activeFile.path);
-          }
-          if (file && file instanceof import_obsidian.TFile) {
-            const fileContent = await this.app.vault.readBinary(file);
-            const fileBuffer = Buffer.from(fileContent);
-            const imageUrl = await this.uploadSingleImage(
-              accessToken,
-              fileBuffer,
-              file.name,
-              "image/" + file.extension
-            );
-            img.setAttribute("src", imageUrl);
-            console.log("\u6210\u529F\u4E0A\u4F20\u56FE\u7247:", file.name, "->", imageUrl);
-          }
-        } catch (error) {
-          console.error("\u5904\u7406\u56FE\u7247\u5931\u8D25:", error);
-        }
-      }
-    }
-    return tempDiv.innerHTML;
-  }
-  beautifyContentForWechat(htmlContent) {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlContent;
-    tempDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    tempDiv.style.lineHeight = "1.75";
-    tempDiv.style.color = "#333";
-    tempDiv.style.fontSize = "16px";
-    const paragraphs = tempDiv.querySelectorAll("p");
-    paragraphs.forEach((p) => {
-      p.style.margin = "0 0 18px 0";
-      p.style.textIndent = "0";
-      p.style.lineHeight = "1.8";
-    });
-    const h1s = tempDiv.querySelectorAll("h1");
-    h1s.forEach((h1) => {
-      h1.style.margin = "30px 0 15px";
-      h1.style.fontSize = "24px";
-      h1.style.fontWeight = "700";
-      h1.style.color = "#333";
-      h1.style.textAlign = "center";
-      h1.style.lineHeight = "1.4";
-    });
-    const h2s = tempDiv.querySelectorAll("h2");
-    h2s.forEach((h2) => {
-      h2.style.margin = "28px 0 12px";
-      h2.style.fontSize = "20px";
-      h2.style.fontWeight = "700";
-      h2.style.color = "#333";
-      h2.style.borderBottom = "1px solid #eee";
-      h2.style.paddingBottom = "8px";
-    });
-    const h3s = tempDiv.querySelectorAll("h3");
-    h3s.forEach((h3) => {
-      h3.style.margin = "25px 0 10px";
-      h3.style.fontSize = "18px";
-      h3.style.fontWeight = "600";
-      h3.style.color = "#333";
-    });
-    const h4s = tempDiv.querySelectorAll("h4");
-    h4s.forEach((h4) => {
-      h4.style.margin = "20px 0 8px";
-      h4.style.fontSize = "16px";
-      h4.style.fontWeight = "600";
-      h4.style.color = "#333";
-    });
-    const images = tempDiv.querySelectorAll("img");
-    images.forEach((img) => {
-      img.style.maxWidth = "100%";
-      img.style.height = "auto";
-      img.style.margin = "15px auto";
-      img.style.display = "block";
-      img.style.borderRadius = "4px";
-      img.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
-      img.style.background = "#fff";
-      img.style.padding = "4px";
-      img.style.border = "1px solid #eee";
-      const parent = img.parentElement;
-      if (parent.tagName !== "P") {
-        parent.style.textAlign = "center";
-      }
-    });
-    const links = tempDiv.querySelectorAll("a");
-    links.forEach((a) => {
-      a.style.color = "#1AAD19";
-      a.style.textDecoration = "none";
-      a.style.borderBottom = "1px solid rgba(26, 173, 25, 0.3)";
-      a.target = "_blank";
-    });
-    const uls = tempDiv.querySelectorAll("ul");
-    uls.forEach((ul) => {
-      ul.style.margin = "18px 0";
-      ul.style.paddingLeft = "28px";
-      ul.style.listStyleType = "disc";
-    });
-    const ols = tempDiv.querySelectorAll("ol");
-    ols.forEach((ol) => {
-      ol.style.margin = "18px 0";
-      ol.style.paddingLeft = "28px";
-      ol.style.listStyleType = "decimal";
-    });
-    const listItems = tempDiv.querySelectorAll("li");
-    listItems.forEach((li) => {
-      li.style.marginBottom = "8px";
-      li.style.lineHeight = "1.8";
-    });
-    const preBlocks = tempDiv.querySelectorAll("pre");
-    preBlocks.forEach((pre) => {
-      pre.style.margin = "18px 0";
-      pre.style.padding = "15px";
-      pre.style.background = "#f8f8f8";
-      pre.style.borderRadius = "6px";
-      pre.style.overflowX = "auto";
-      pre.style.fontFamily = '"Consolas", "Monaco", "Courier New", monospace';
-      pre.style.fontSize = "14px";
-      pre.style.lineHeight = "1.6";
-      pre.style.border = "1px solid #eee";
-    });
-    const codes = tempDiv.querySelectorAll("code:not(pre code)");
-    codes.forEach((code) => {
-      code.style.background = "#f5f5f5";
-      code.style.padding = "3px 6px";
-      code.style.borderRadius = "3px";
-      code.style.fontFamily = '"Consolas", "Monaco", monospace';
-      code.style.fontSize = "0.9em";
-    });
-    const blockquotes = tempDiv.querySelectorAll("blockquote");
-    blockquotes.forEach((quote) => {
-      quote.style.margin = "18px 0";
-      quote.style.padding = "15px 20px";
-      quote.style.borderLeft = "4px solid #07C160";
-      quote.style.background = "#f9f9f9";
-      quote.style.color = "#666";
-      quote.style.fontSize = "15px";
-      quote.style.borderRadius = "0 4px 4px 0";
-    });
-    const tables = tempDiv.querySelectorAll("table");
-    tables.forEach((table) => {
-      table.style.margin = "18px 0";
-      table.style.width = "100%";
-      table.style.borderCollapse = "collapse";
-      table.style.fontSize = "14px";
-    });
-    const tableCells = tempDiv.querySelectorAll("td, th");
-    tableCells.forEach((cell) => {
-      cell.style.padding = "10px 12px";
-      cell.style.border = "1px solid #ddd";
-      cell.style.textAlign = "left";
-    });
-    const tableHeaders = tempDiv.querySelectorAll("th");
-    tableHeaders.forEach((header) => {
-      header.style.backgroundColor = "#f5f5f5";
-      header.style.fontWeight = "600";
-      header.style.color = "#333";
-    });
-    const hr = tempDiv.querySelectorAll("hr");
-    hr.forEach((line) => {
-      line.style.margin = "25px 0";
-      line.style.border = "none";
-      line.style.borderTop = "1px solid #eee";
-    });
-    return tempDiv.innerHTML;
-  }
   async createDraft(accessToken, title, content, coverMediaId = "") {
     try {
       const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${accessToken}`;
@@ -906,44 +366,771 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
       throw error;
     }
   }
-  async processImagePaths(htmlContent, activeFile) {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlContent;
-    const images = tempDiv.querySelectorAll("img");
-    for (const img of images) {
-      let src = img.getAttribute("src");
-      if (!src)
-        continue;
-      if (!src.startsWith("http://") && !src.startsWith("https://")) {
-        try {
-          let file;
-          if (src.startsWith("app://local/")) {
-            const localPath = decodeURIComponent(src.replace("app://local/", ""));
-            file = this.app.vault.getAbstractFileByPath(localPath);
-          } else if (src.startsWith("file:///")) {
-            const localPath = decodeURIComponent(src.replace("file:///", ""));
-            const files = this.app.vault.getAllFiles();
-            file = files.find((f) => f.path === localPath || f.path.endsWith(localPath));
-          } else {
-            file = this.app.metadataCache.getFirstLinkpathDest(src, activeFile.path);
-          }
-          if (file && file instanceof import_obsidian.TFile) {
-            src = this.app.vault.getResourcePath(file);
-            img.setAttribute("src", src);
-          }
-        } catch (error) {
-          console.error("\u5904\u7406\u56FE\u7247\u8DEF\u5F84\u5931\u8D25:", error);
+};
+
+// src/sidebar.js
+var import_obsidian = require("obsidian");
+var PublisherSidebarView = class extends import_obsidian.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+    this.coverImage = "";
+    this.coverFile = null;
+  }
+  getViewType() {
+    return "wechat-mp-publisher-sidebar";
+  }
+  getDisplayText() {
+    return "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F";
+  }
+  getIcon() {
+    return "paper-plane";
+  }
+  async onOpen() {
+    const container = this.contentEl;
+    container.empty();
+    const titleEl = container.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F" });
+    titleEl.style.marginBottom = "20px";
+    const previewButton = container.createEl("button", { text: "\u9884\u89C8\u5F53\u524D\u6587\u6863" });
+    previewButton.className = "mod-cta";
+    previewButton.style.width = "100%";
+    previewButton.style.marginBottom = "10px";
+    previewButton.style.padding = "8px";
+    previewButton.addEventListener("click", () => {
+      if (this.coverFile) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          this.plugin.previewCurrentDocument(event.target.result);
+        };
+        reader.readAsDataURL(this.coverFile);
+      } else {
+        this.plugin.previewCurrentDocument();
+      }
+    });
+    const coverSection = container.createEl("div");
+    coverSection.style.marginBottom = "15px";
+    const coverLabel = coverSection.createEl("h3", { text: "\u5C01\u9762\u8BBE\u7F6E" });
+    coverLabel.style.fontSize = "14px";
+    coverLabel.style.marginBottom = "8px";
+    const coverInput = coverSection.createEl("input", {
+      type: "file",
+      accept: "image/*"
+    });
+    coverInput.style.width = "100%";
+    coverInput.style.padding = "8px";
+    coverInput.style.marginBottom = "8px";
+    const coverPreview = coverSection.createEl("div");
+    coverPreview.style.border = "1px solid var(--background-modifier-border)";
+    coverPreview.style.borderRadius = "4px";
+    coverPreview.style.height = "100px";
+    coverPreview.style.overflow = "hidden";
+    coverPreview.style.display = "flex";
+    coverPreview.style.alignItems = "center";
+    coverPreview.style.justifyContent = "center";
+    coverPreview.textContent = "\u5C01\u9762\u9884\u89C8";
+    coverInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.coverFile = file;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          coverPreview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        this.coverFile = null;
+        coverPreview.innerHTML = "\u5C01\u9762\u9884\u89C8";
+      }
+    });
+    const uploadButton = container.createEl("button", { text: "\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1" });
+    uploadButton.className = "mod-cta";
+    uploadButton.style.width = "100%";
+    uploadButton.style.marginBottom = "10px";
+    uploadButton.style.padding = "8px";
+    uploadButton.addEventListener("click", async () => {
+      await this.plugin.uploadToDraftBox(this.coverFile);
+    });
+    const networkTestSection = container.createEl("div");
+    networkTestSection.style.marginBottom = "15px";
+    const networkTestLabel = networkTestSection.createEl("h3", { text: "\u7F51\u7EDC\u6D4B\u8BD5" });
+    networkTestLabel.style.fontSize = "14px";
+    networkTestLabel.style.marginBottom = "8px";
+    const networkTestInput = networkTestSection.createEl("input", {
+      type: "text",
+      placeholder: "http://baidu.com"
+    });
+    networkTestInput.style.width = "100%";
+    networkTestInput.style.padding = "8px";
+    networkTestInput.style.marginBottom = "8px";
+    networkTestInput.style.border = "1px solid var(--background-modifier-border)";
+    networkTestInput.style.borderRadius = "4px";
+    networkTestInput.value = this.plugin.settings.networkTestUrl;
+    const networkTestButton = networkTestSection.createEl("button", { text: "\u6D4B\u8BD5\u8FDE\u63A5" });
+    networkTestButton.style.width = "100%";
+    networkTestButton.style.padding = "8px";
+    networkTestButton.style.marginBottom = "8px";
+    networkTestButton.addEventListener("click", async () => {
+      const testUrl = networkTestInput.value || this.plugin.settings.networkTestUrl;
+      await this.plugin.testNetworkConnection(testUrl);
+    });
+    networkTestInput.addEventListener("change", async (e) => {
+      this.plugin.settings.networkTestUrl = e.target.value;
+      await this.plugin.saveSettings();
+    });
+    const networkTestNote = networkTestSection.createEl("p");
+    networkTestNote.style.fontSize = "12px";
+    networkTestNote.style.color = "var(--text-muted)";
+    networkTestNote.textContent = "\u63D0\u793A\uFF1A\u53EF\u4EE5\u6D4B\u8BD5\u4EFB\u4F55HTTP/HTTPS\u5730\u5740\uFF0C\u5305\u62EC\u5FAE\u4FE1\u516C\u4F17\u53F7API\u5730\u5740";
+    const apiTestButton = container.createEl("button", { text: "API\u6D4B\u8BD5" });
+    apiTestButton.style.width = "100%";
+    apiTestButton.style.marginBottom = "10px";
+    apiTestButton.style.padding = "8px";
+    apiTestButton.addEventListener("click", async () => {
+      await this.plugin.testAPIKeys();
+    });
+    const noteEl = container.createEl("p");
+    noteEl.style.fontSize = "12px";
+    noteEl.style.color = "var(--text-muted)";
+    noteEl.textContent = "\u63D0\u793A\uFF1A\u4E0A\u4F20\u524D\u8BF7\u786E\u4FDD\u5DF2\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7\u4FE1\u606F";
+  }
+  async onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/settings.js
+var import_obsidian2 = require("obsidian");
+var NetworkTestSettingsTab = class extends import_obsidian2.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    containerEl.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u8BBE\u7F6E" });
+    containerEl.createEl("h3", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u914D\u7F6E" });
+    new import_obsidian2.Setting(containerEl).setName("AppID").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppID").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppID").setValue(this.plugin.settings.appId).onChange(async (value) => {
+      this.plugin.settings.appId = value;
+      await this.plugin.saveSettings();
+    }));
+    new import_obsidian2.Setting(containerEl).setName("AppSecret").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppSecret").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppSecret").setValue(this.plugin.settings.appSecret).onChange(async (value) => {
+      this.plugin.settings.appSecret = value;
+      await this.plugin.saveSettings();
+    }));
+    containerEl.createEl("h3", { text: "\u7F51\u7EDC\u914D\u7F6E" });
+    new import_obsidian2.Setting(containerEl).setName("\u7F51\u7EDC\u8BF7\u6C42\u8D85\u65F6\u65F6\u95F4").setDesc("\u7F51\u7EDC\u8BF7\u6C42\u7684\u8D85\u65F6\u65F6\u95F4\uFF08\u6BEB\u79D2\uFF09").addText((text) => text.setPlaceholder("5000").setValue(this.plugin.settings.timeout.toString()).onChange(async (value) => {
+      const timeout = parseInt(value);
+      if (!isNaN(timeout) && timeout > 0) {
+        this.plugin.settings.timeout = timeout;
+        await this.plugin.saveSettings();
+        new import_obsidian2.Notice("\u8D85\u65F6\u65F6\u95F4\u5DF2\u66F4\u65B0", 2e3);
+      } else {
+        new import_obsidian2.Notice("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u8D85\u65F6\u65F6\u95F4", 2e3);
+      }
+    }));
+  }
+};
+
+// src/utils.js
+var import_obsidian3 = require("obsidian");
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+function sanitizeHtml(html) {
+  console.log("sanitizeHtml \u88AB\u8C03\u7528\uFF0C\u8F93\u5165\u5185\u5BB9\uFF08\u524D200\u5B57\u7B26\uFF09:", html.substring(0, 200));
+  if (!html)
+    return "";
+  const tempDiv = document.createElement("div");
+  const decoderDiv = document.createElement("div");
+  decoderDiv.textContent = html;
+  const decodedHtml = decoderDiv.innerHTML;
+  console.log("\u89E3\u7801\u540E\u7684\u5185\u5BB9\uFF08\u524D200\u5B57\u7B26\uFF09:", decodedHtml.substring(0, 200));
+  if (decodedHtml !== html) {
+    console.log("\u68C0\u6D4B\u5230HTML\u5B9E\u4F53\u7F16\u7801\uFF0C\u4F7F\u7528\u89E3\u7801\u540E\u7684\u5185\u5BB9");
+    html = decodedHtml;
+  } else {
+    console.log("\u672A\u68C0\u6D4B\u5230HTML\u5B9E\u4F53\u7F16\u7801\uFF0C\u4F7F\u7528\u539F\u5185\u5BB9");
+  }
+  tempDiv.innerHTML = html;
+  const allowedTags = /* @__PURE__ */ new Set([
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "br",
+    "hr",
+    "strong",
+    "em",
+    "u",
+    "s",
+    "b",
+    "i",
+    "ul",
+    "ol",
+    "li",
+    "pre",
+    "code",
+    "kbd",
+    "a",
+    "img",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "blockquote",
+    "span",
+    "div",
+    "input",
+    "label",
+    "sup",
+    "sub"
+  ]);
+  const allowedAttributes = /* @__PURE__ */ new Set([
+    "src",
+    "alt",
+    "title",
+    "width",
+    "height",
+    "href",
+    "target",
+    "rel",
+    "class",
+    "id",
+    "style",
+    "colspan",
+    "rowspan",
+    "type",
+    "checked",
+    "disabled",
+    "name",
+    "value",
+    "for",
+    "data-line",
+    "data-source"
+  ]);
+  const allowedStyles = /* @__PURE__ */ new Set([
+    "color",
+    "background-color",
+    "font-size",
+    "font-weight",
+    "text-align",
+    "margin",
+    "padding",
+    "line-height",
+    "width",
+    "height",
+    "border",
+    "border-radius",
+    "display",
+    "text-indent",
+    "font-family",
+    "font-style",
+    "text-decoration",
+    "white-space",
+    "overflow",
+    "overflow-x",
+    "overflow-y",
+    "position",
+    "top",
+    "right",
+    "bottom",
+    "left",
+    "float",
+    "clear",
+    "vertical-align",
+    "background",
+    "background-image",
+    "background-repeat",
+    "background-position",
+    "background-size",
+    "box-shadow",
+    "text-shadow",
+    "opacity",
+    "transform",
+    "transition",
+    "animation"
+  ]);
+  const isSafeUrl = (url) => {
+    if (!url || typeof url !== "string")
+      return false;
+    try {
+      const parsedUrl = new URL(url, "http://example.com");
+      return ["http:", "https:", "app:", "file:"].includes(parsedUrl.protocol);
+    } catch (e) {
+      return false;
+    }
+  };
+  const processElement = (element) => {
+    if (!allowedTags.has(element.tagName.toLowerCase())) {
+      const textNode = document.createTextNode(element.textContent);
+      element.parentNode.replaceChild(textNode, element);
+      return;
+    }
+    Array.from(element.attributes).forEach((attr) => {
+      const attrName = attr.name.toLowerCase();
+      const attrValue = attr.value;
+      if (attrName.startsWith("data-")) {
+        return;
+      }
+      if (!allowedAttributes.has(attrName)) {
+        element.removeAttribute(attr.name);
+      } else if (attrName === "href" || attrName === "src") {
+        if (!isSafeUrl(attrValue)) {
+          element.setAttribute(attr.name, attrName === "href" ? "#" : "");
+        } else if (attrName === "href") {
+          element.setAttribute("target", "_blank");
+          element.setAttribute("rel", "noopener noreferrer");
         }
+      } else if (attrName === "style") {
+        const styleDeclarations = attrValue.split(";");
+        const safeStyles = [];
+        styleDeclarations.forEach((declaration) => {
+          const parts = declaration.split(":").map((part) => part.trim());
+          if (parts.length === 2) {
+            const [property, value] = parts;
+            if (allowedStyles.has(property.toLowerCase())) {
+              safeStyles.push(`${property}: ${value}`);
+            }
+          }
+        });
+        if (safeStyles.length > 0) {
+          element.setAttribute("style", safeStyles.join("; "));
+        } else {
+          element.removeAttribute("style");
+        }
+      } else if (attrName === "class") {
+        element.setAttribute(attr.name, attrValue);
+      } else if (attrName === "id") {
+        element.setAttribute(attr.name, attrValue);
+      } else {
+        element.setAttribute(attr.name, escapeHtml(attrValue));
+      }
+    });
+    Array.from(element.childNodes).forEach((child) => {
+      if (child.nodeType === 1) {
+        processElement(child);
+      }
+    });
+  };
+  Array.from(tempDiv.childNodes).forEach((child) => {
+    if (child.nodeType === 1) {
+      processElement(child);
+    }
+  });
+  return tempDiv.innerHTML;
+}
+function processInternalLinks(htmlContent) {
+  const internalImageRegex = /!\[\[(.*?)\]\]/g;
+  return htmlContent.replace(internalImageRegex, (match, imagePath) => {
+    const cleanPath = imagePath.split("|")[0].trim();
+    return `<img src="${cleanPath}" alt="${cleanPath}">`;
+  });
+}
+async function processContentImages(htmlContent, accessToken, activeFile, uploadSingleImage, app) {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = htmlContent;
+  const images = tempDiv.querySelectorAll("img");
+  for (const img of images) {
+    let src = img.getAttribute("src");
+    if (!src)
+      continue;
+    if (!src.startsWith("http://") && !src.startsWith("https://")) {
+      try {
+        let file;
+        if (src.startsWith("app://local/")) {
+          const localPath = decodeURIComponent(src.replace("app://local/", ""));
+          file = app.vault.getAbstractFileByPath(localPath);
+        } else if (src.startsWith("file:///")) {
+          const localPath = decodeURIComponent(src.replace("file:///", ""));
+          const files = app.vault.getAllFiles();
+          file = files.find((f) => f.path === localPath || f.path.endsWith(localPath));
+        } else {
+          file = app.metadataCache.getFirstLinkpathDest(src, activeFile.path);
+        }
+        if (file && file instanceof import_obsidian3.TFile) {
+          const fileContent = await app.vault.readBinary(file);
+          const fileBuffer = Buffer.from(fileContent);
+          const imageUrl = await uploadSingleImage(
+            accessToken,
+            fileBuffer,
+            file.name,
+            "image/" + file.extension
+          );
+          img.setAttribute("src", imageUrl);
+          console.log("\u6210\u529F\u4E0A\u4F20\u56FE\u7247:", file.name, "->", imageUrl);
+        }
+      } catch (error) {
+        console.error("\u5904\u7406\u56FE\u7247\u5931\u8D25:", error);
       }
     }
-    return tempDiv.innerHTML;
+  }
+  return tempDiv.innerHTML;
+}
+async function processImagePaths(htmlContent, activeFile, app) {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = htmlContent;
+  const images = tempDiv.querySelectorAll("img");
+  for (const img of images) {
+    let src = img.getAttribute("src");
+    if (!src)
+      continue;
+    if (!src.startsWith("http://") && !src.startsWith("https://")) {
+      try {
+        let file;
+        if (src.startsWith("app://local/")) {
+          const localPath = decodeURIComponent(src.replace("app://local/", ""));
+          file = app.vault.getAbstractFileByPath(localPath);
+        } else if (src.startsWith("file:///")) {
+          const localPath = decodeURIComponent(src.replace("file:///", ""));
+          const files = app.vault.getAllFiles();
+          file = files.find((f) => f.path === localPath || f.path.endsWith(localPath));
+        } else {
+          file = app.metadataCache.getFirstLinkpathDest(src, activeFile.path);
+        }
+        if (file && file instanceof import_obsidian3.TFile) {
+          src = app.vault.getResourcePath(file);
+          img.setAttribute("src", src);
+        }
+      } catch (error) {
+        console.error("\u5904\u7406\u56FE\u7247\u8DEF\u5F84\u5931\u8D25:", error);
+      }
+    }
+  }
+  return tempDiv.innerHTML;
+}
+function beautifyContentForWechat(htmlContent) {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = htmlContent;
+  tempDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+  tempDiv.style.lineHeight = "1.75";
+  tempDiv.style.color = "#333";
+  tempDiv.style.fontSize = "16px";
+  const paragraphs = tempDiv.querySelectorAll("p");
+  paragraphs.forEach((p) => {
+    p.style.margin = "0 0 18px 0";
+    p.style.textIndent = "0";
+    p.style.lineHeight = "1.8";
+  });
+  const h1s = tempDiv.querySelectorAll("h1");
+  h1s.forEach((h1) => {
+    h1.style.margin = "30px 0 15px";
+    h1.style.fontSize = "24px";
+    h1.style.fontWeight = "700";
+    h1.style.color = "#333";
+    h1.style.textAlign = "center";
+    h1.style.lineHeight = "1.4";
+  });
+  const h2s = tempDiv.querySelectorAll("h2");
+  h2s.forEach((h2) => {
+    h2.style.margin = "28px 0 12px";
+    h2.style.fontSize = "20px";
+    h2.style.fontWeight = "700";
+    h2.style.color = "#333";
+    h2.style.borderBottom = "1px solid #eee";
+    h2.style.paddingBottom = "8px";
+  });
+  const h3s = tempDiv.querySelectorAll("h3");
+  h3s.forEach((h3) => {
+    h3.style.margin = "25px 0 10px";
+    h3.style.fontSize = "18px";
+    h3.style.fontWeight = "600";
+    h3.style.color = "#333";
+  });
+  const h4s = tempDiv.querySelectorAll("h4");
+  h4s.forEach((h4) => {
+    h4.style.margin = "20px 0 8px";
+    h4.style.fontSize = "16px";
+    h4.style.fontWeight = "600";
+    h4.style.color = "#333";
+  });
+  const images = tempDiv.querySelectorAll("img");
+  images.forEach((img) => {
+    img.style.maxWidth = "100%";
+    img.style.height = "auto";
+    img.style.margin = "15px auto";
+    img.style.display = "block";
+    img.style.borderRadius = "4px";
+    img.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
+    img.style.background = "#fff";
+    img.style.padding = "4px";
+    img.style.border = "1px solid #eee";
+    const parent = img.parentElement;
+    if (parent.tagName !== "P") {
+      parent.style.textAlign = "center";
+    }
+  });
+  const links = tempDiv.querySelectorAll("a");
+  links.forEach((a) => {
+    a.style.color = "#1AAD19";
+    a.style.textDecoration = "none";
+    a.style.borderBottom = "1px solid rgba(26, 173, 25, 0.3)";
+    a.target = "_blank";
+  });
+  const uls = tempDiv.querySelectorAll("ul");
+  uls.forEach((ul) => {
+    ul.style.margin = "18px 0";
+    ul.style.paddingLeft = "28px";
+    ul.style.listStyleType = "disc";
+  });
+  const ols = tempDiv.querySelectorAll("ol");
+  ols.forEach((ol) => {
+    ol.style.margin = "18px 0";
+    ol.style.paddingLeft = "28px";
+    ol.style.listStyleType = "decimal";
+  });
+  const listItems = tempDiv.querySelectorAll("li");
+  listItems.forEach((li) => {
+    li.style.marginBottom = "8px";
+    li.style.lineHeight = "1.8";
+  });
+  const preBlocks = tempDiv.querySelectorAll("pre");
+  preBlocks.forEach((pre) => {
+    pre.style.margin = "18px 0";
+    pre.style.padding = "15px";
+    pre.style.background = "#f8f8f8";
+    pre.style.borderRadius = "6px";
+    pre.style.overflowX = "auto";
+    pre.style.fontFamily = '"Consolas", "Monaco", "Courier New", monospace';
+    pre.style.fontSize = "14px";
+    pre.style.lineHeight = "1.6";
+    pre.style.border = "1px solid #eee";
+  });
+  const codes = tempDiv.querySelectorAll("code:not(pre code)");
+  codes.forEach((code) => {
+    code.style.background = "#f5f5f5";
+    code.style.padding = "3px 6px";
+    code.style.borderRadius = "3px";
+    code.style.fontFamily = '"Consolas", "Monaco", monospace';
+    code.style.fontSize = "0.9em";
+  });
+  const blockquotes = tempDiv.querySelectorAll("blockquote");
+  blockquotes.forEach((quote) => {
+    quote.style.margin = "18px 0";
+    quote.style.padding = "15px 20px";
+    quote.style.borderLeft = "4px solid #07C160";
+    quote.style.background = "#f9f9f9";
+    quote.style.color = "#666";
+    quote.style.fontSize = "15px";
+    quote.style.borderRadius = "0 4px 4px 0";
+  });
+  const tables = tempDiv.querySelectorAll("table");
+  tables.forEach((table) => {
+    table.style.margin = "18px 0";
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    table.style.fontSize = "14px";
+  });
+  const tableCells = tempDiv.querySelectorAll("td, th");
+  tableCells.forEach((cell) => {
+    cell.style.padding = "10px 12px";
+    cell.style.border = "1px solid #ddd";
+    cell.style.textAlign = "left";
+  });
+  const tableHeaders = tempDiv.querySelectorAll("th");
+  tableHeaders.forEach((header) => {
+    header.style.backgroundColor = "#f5f5f5";
+    header.style.fontWeight = "600";
+    header.style.color = "#333";
+  });
+  const hr = tempDiv.querySelectorAll("hr");
+  hr.forEach((line) => {
+    line.style.margin = "25px 0";
+    line.style.border = "none";
+    line.style.borderTop = "1px solid #eee";
+  });
+  return tempDiv.innerHTML;
+}
+
+// src/main.js
+var WeChatMPPublisher = class extends import_obsidian4.Plugin {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "settings", {
+      timeout: 3e4,
+      networkTestUrl: "http://baidu.com",
+      appId: "",
+      appSecret: "",
+      accessToken: "",
+      accessTokenExpire: 0
+    });
+    __publicField(this, "api");
+  }
+  async onload() {
+    console.log("\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u63D2\u4EF6\u5DF2\u52A0\u8F7D");
+    window.plugin = this;
+    this.api = new WeChatMPAPI(this.settings);
+    this.registerView(
+      "wechat-mp-publisher-sidebar",
+      (leaf) => new PublisherSidebarView(leaf, this)
+    );
+    await this.loadSettings();
+    this.addRibbonIcon("paper-plane", "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F", async () => {
+      try {
+        await this.openPublisherSidebar();
+      } catch (error) {
+        console.error("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25:", error);
+        new import_obsidian4.Notice("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u65E5\u5FD7", 5e3);
+      }
+    });
+    this.addCommand({
+      id: "open-wechat-mp-publisher",
+      name: "\u6253\u5F00\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F",
+      callback: async () => {
+        try {
+          await this.openPublisherSidebar();
+        } catch (error) {
+          console.error("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25:", error);
+          new import_obsidian4.Notice("\u6253\u5F00\u53D1\u5E03\u9762\u677F\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u65E5\u5FD7", 5e3);
+        }
+      }
+    });
+    this.addCommand({
+      id: "publish-to-wechat-mp",
+      name: "\u76F4\u63A5\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7",
+      callback: async () => {
+        try {
+          await this.publishToWeChatMP();
+        } catch (error) {
+          console.error("\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7\u5931\u8D25:", error);
+        }
+      }
+    });
+    this.addSettingTab(new NetworkTestSettingsTab(this.app, this));
+  }
+  async openPublisherSidebar() {
+    const existingLeaves = this.app.workspace.getLeavesOfType("wechat-mp-publisher-sidebar");
+    if (existingLeaves.length > 0) {
+      const publisherLeaf = existingLeaves[0];
+      const isActive = this.app.workspace.getActiveViewOfType(PublisherSidebarView) !== null;
+      if (isActive) {
+        publisherLeaf.detach();
+        return;
+      } else {
+        this.app.workspace.revealLeaf(publisherLeaf);
+        return;
+      }
+    }
+    const leaf = this.app.workspace.getRightLeaf(false);
+    await leaf.setViewState({
+      type: "wechat-mp-publisher-sidebar"
+    });
+  }
+  async onunload() {
+    this.app.workspace.getLeavesOfType("wechat-mp-publisher-sidebar").forEach((leaf) => leaf.detach());
+    console.log("\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u63D2\u4EF6\u5DF2\u5378\u8F7D\uFF0C\u81EA\u5B9A\u4E49\u89C6\u56FE\u5DF2\u6E05\u7406");
+  }
+  async loadSettings() {
+    this.settings = Object.assign({}, {
+      timeout: 5e3,
+      networkTestUrl: "http://baidu.com",
+      appId: "",
+      appSecret: "",
+      accessToken: "",
+      accessTokenExpire: 0
+    }, await this.loadData());
+    this.api.updateSettings(this.settings);
+  }
+  async saveSettings() {
+    await this.saveData(this.settings);
+    this.api.updateSettings(this.settings);
+  }
+  async testNetworkConnection(testUrl = "http://baidu.com") {
+    const notice = new import_obsidian4.Notice("\u6B63\u5728\u6D4B\u8BD5\u7F51\u7EDC\u8FDE\u63A5...", 0);
+    try {
+      notice.setMessage(`\u6B63\u5728\u8BBF\u95EE${testUrl}...`);
+      const protocol = testUrl.startsWith("https") ? import_https2.default : import_http.default;
+      const response = await new Promise((resolve, reject) => {
+        const req = protocol.get(testUrl, {
+          timeout: this.settings.timeout
+        }, (res) => {
+          let data = "";
+          res.on("data", (chunk) => {
+            data += chunk;
+          });
+          res.on("end", () => {
+            resolve({
+              status: res.statusCode,
+              data
+            });
+          });
+        });
+        req.on("error", (err) => {
+          reject(err);
+        });
+        req.on("timeout", () => {
+          req.destroy();
+          reject(new Error("\u8BF7\u6C42\u8D85\u65F6"));
+        });
+      });
+      const successMsg = `\u7F51\u7EDC\u8FDE\u63A5\u6D4B\u8BD5\u6210\u529F: \u6210\u529F\u8BBF\u95EE${testUrl}\uFF0CHTTP\u72B6\u6001\u7801: ${response.status}`;
+      notice.hide();
+      new import_obsidian4.Notice(successMsg, 1e4);
+      console.log(successMsg);
+      const responseText = response.data.substring(0, 100) + "...";
+      console.log(`${testUrl}\u54CD\u5E94\u5185\u5BB9:`, responseText);
+      return { success: true, message: successMsg };
+    } catch (error) {
+      let errorMsg = "\u7F51\u7EDC\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25";
+      if (error.code) {
+        errorMsg += `: \u9519\u8BEF\u7801 ${error.code}`;
+      }
+      if (error.message) {
+        errorMsg += `: ${error.message}`;
+      }
+      errorMsg += `
+\u8BF7\u6C42URL: ${testUrl}`;
+      errorMsg += `
+\u8D85\u65F6\u65F6\u95F4: ${this.settings.timeout}ms`;
+      errorMsg += "\n\n\u53EF\u80FD\u7684\u89E3\u51B3\u65B9\u6848\uFF1A\n";
+      errorMsg += "1. \u68C0\u67E5\u76EE\u6807\u670D\u52A1\u5668\u662F\u5426\u5728\u8FD0\u884C\n";
+      errorMsg += "2. \u68C0\u67E5URL\u662F\u5426\u6B63\u786E\n";
+      errorMsg += "3. \u68C0\u67E5\u672C\u5730\u7F51\u7EDC\u662F\u5426\u6B63\u5E38\n";
+      errorMsg += "4. \u5C1D\u8BD5\u4ECE\u6D4F\u89C8\u5668\u76F4\u63A5\u8BBF\u95EE\u8BE5\u5730\u5740\n";
+      errorMsg += "5. \u68C0\u67E5\u662F\u5426\u6709\u5176\u4ED6\u7F51\u7EDC\u5B89\u5168\u8F6F\u4EF6\u963B\u6B62\u8FDE\u63A5\n";
+      notice.hide();
+      new import_obsidian4.Notice(errorMsg, 15e3);
+      console.error("\u7F51\u7EDC\u6D4B\u8BD5\u8BE6\u7EC6\u9519\u8BEF:", error);
+      return { success: false, message: errorMsg };
+    }
+  }
+  async testAPIKeys() {
+    const notice = new import_obsidian4.Notice("\u6B63\u5728\u6D4B\u8BD5\u5FAE\u4FE1\u516C\u4F17\u53F7API\u5BC6\u94A5...", 0);
+    try {
+      if (!this.settings.appId || !this.settings.appSecret) {
+        throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7AppID\u548CAppSecret");
+      }
+      notice.setMessage("\u6B63\u5728\u9A8C\u8BC1API\u5BC6\u94A5...");
+      const accessToken = await this.api.getAccessToken();
+      notice.hide();
+      const successMsg = `API\u5BC6\u94A5\u6D4B\u8BD5\u6210\u529F\uFF01\u83B7\u53D6\u5230access_token: ${accessToken.substring(0, 20)}...`;
+      new import_obsidian4.Notice(successMsg, 1e4);
+      console.log(successMsg);
+      return { success: true, message: successMsg };
+    } catch (error) {
+      let errorMsg = "API\u5BC6\u94A5\u6D4B\u8BD5\u5931\u8D25";
+      if (error.message) {
+        errorMsg += `: ${error.message}`;
+      }
+      notice.hide();
+      new import_obsidian4.Notice(errorMsg, 15e3);
+      console.error("API\u6D4B\u8BD5\u8BE6\u7EC6\u9519\u8BEF:", error);
+      return { success: false, message: errorMsg };
+    }
   }
   async previewCurrentDocument(coverImage = "") {
     console.log("previewCurrentDocument \u88AB\u8C03\u7528");
     const activeFile = this.app.workspace.getActiveFile();
     console.log("\u5F53\u524D\u6D3B\u52A8\u6587\u4EF6:", activeFile);
     if (!activeFile) {
-      new import_obsidian.Notice("\u8BF7\u5148\u6253\u5F00\u8981\u9884\u89C8\u7684\u6587\u6863", 5e3);
+      new import_obsidian4.Notice("\u8BF7\u5148\u6253\u5F00\u8981\u9884\u89C8\u7684\u6587\u6863", 5e3);
       return;
     }
     try {
@@ -955,38 +1142,38 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
         console.log("\u4F7F\u7528 app.renderMarkdown \u6E32\u67D3...");
         htmlContent = await this.app.renderMarkdown(content, activeFile, null);
         console.log("app.renderMarkdown \u8FD4\u56DE\u7684\u5185\u5BB9\uFF08\u524D200\u5B57\u7B26\uFF09:", htmlContent.substring(0, 200));
-        htmlContent = this.sanitizeHtml(htmlContent);
+        htmlContent = sanitizeHtml(htmlContent);
         console.log("sanitizeHtml \u8FD4\u56DE\u7684\u5185\u5BB9\uFF08\u524D200\u5B57\u7B26\uFF09:", htmlContent.substring(0, 200));
       } else {
         console.log("\u4F7F\u7528\u964D\u7EA7\u65B9\u6848\u6E32\u67D3...");
         htmlContent = content.replace(/```([\s\S]*?)```/g, (match, code) => {
-          return `<pre><code>${this.escapeHtml(code)}</code></pre>`;
+          return `<pre><code>${escapeHtml(code)}</code></pre>`;
         });
         htmlContent = htmlContent.replace(/(#{1,6}) (.*?)(\n|$)/g, (match, level, text) => {
-          return `<h${level.length}>${this.escapeHtml(text)}</h${level.length}>`;
+          return `<h${level.length}>${escapeHtml(text)}</h${level.length}>`;
         });
         htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, (match, text) => {
-          return `<strong>${this.escapeHtml(text)}</strong>`;
+          return `<strong>${escapeHtml(text)}</strong>`;
         });
         htmlContent = htmlContent.replace(/\*(.*?)\*/g, (match, text) => {
-          return `<em>${this.escapeHtml(text)}</em>`;
+          return `<em>${escapeHtml(text)}</em>`;
         });
         htmlContent = htmlContent.replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
-          return `<a href="${this.escapeHtml(url)}" target="_blank">${this.escapeHtml(text)}</a>`;
+          return `<a href="${escapeHtml(url)}" target="_blank">${escapeHtml(text)}</a>`;
         });
         htmlContent = htmlContent.replace(/\n/g, "<br>");
       }
       console.log("\u5F00\u59CB\u5904\u7406\u5185\u90E8\u94FE\u63A5...");
-      htmlContent = this.processInternalLinks(htmlContent);
+      htmlContent = processInternalLinks(htmlContent);
       console.log("\u5F00\u59CB\u5904\u7406\u56FE\u7247\u8DEF\u5F84...");
-      htmlContent = await this.processImagePaths(htmlContent, activeFile);
+      htmlContent = await processImagePaths(htmlContent, activeFile, this.app);
       console.log("\u5F00\u59CB\u521B\u5EFA\u9884\u89C8\u6A21\u6001\u6846...");
       this.createPreviewModal(activeFile.basename, htmlContent, coverImage);
-      new import_obsidian.Notice("\u5DF2\u751F\u6210\u5FAE\u4FE1\u516C\u4F17\u53F7\u683C\u5F0F\u9884\u89C8", 3e3);
+      new import_obsidian4.Notice("\u5DF2\u751F\u6210\u5FAE\u4FE1\u516C\u4F17\u53F7\u683C\u5F0F\u9884\u89C8", 3e3);
       console.log("\u9884\u89C8\u5B8C\u6210");
     } catch (error) {
       console.error("\u9884\u89C8\u6587\u6863\u9519\u8BEF:", error);
-      new import_obsidian.Notice("\u9884\u89C8\u6587\u6863\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u65E5\u5FD7", 5e3);
+      new import_obsidian4.Notice("\u9884\u89C8\u6587\u6863\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u65E5\u5FD7", 5e3);
     }
   }
   createPreviewModal(title, htmlContent, coverImage = "") {
@@ -1265,7 +1452,7 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
     });
   }
   async uploadToDraftBox(coverImage = null) {
-    const notice = new import_obsidian.Notice("\u6B63\u5728\u51C6\u5907\u4E0A\u4F20\u81F3\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F\u7BB1...", 0);
+    const notice = new import_obsidian4.Notice("\u6B63\u5728\u51C6\u5907\u4E0A\u4F20\u81F3\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F\u7BB1...", 0);
     try {
       if (!this.settings.appId || !this.settings.appSecret) {
         throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7AppID\u548CAppSecret");
@@ -1279,41 +1466,41 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
       notice.setMessage("\u6B63\u5728\u8F6C\u6362\u6587\u6863\u683C\u5F0F...");
       if (this.app.renderMarkdown) {
         content = await this.app.renderMarkdown(content, activeFile, null);
-        content = this.sanitizeHtml(content);
+        content = sanitizeHtml(content);
       } else {
         content = content.replace(/```([\s\S]*?)```/g, (match, code) => {
-          return `<pre><code>${this.escapeHtml(code)}</code></pre>`;
+          return `<pre><code>${escapeHtml(code)}</code></pre>`;
         });
         content = content.replace(/(#{1,6}) (.*?)(\n|$)/g, (match, level, text) => {
-          return `<h${level.length}>${this.escapeHtml(text)}</h${level.length}>`;
+          return `<h${level.length}>${escapeHtml(text)}</h${level.length}>`;
         });
         content = content.replace(/\*\*(.*?)\*\*/g, (match, text) => {
-          return `<strong>${this.escapeHtml(text)}</strong>`;
+          return `<strong>${escapeHtml(text)}</strong>`;
         });
         content = content.replace(/\*(.*?)\*/g, (match, text) => {
-          return `<em>${this.escapeHtml(text)}</em>`;
+          return `<em>${escapeHtml(text)}</em>`;
         });
         content = content.replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
-          return `<a href="${this.escapeHtml(url)}" target="_blank">${this.escapeHtml(text)}</a>`;
+          return `<a href="${escapeHtml(url)}" target="_blank">${escapeHtml(text)}</a>`;
         });
         content = content.replace(/\n/g, "<br>");
       }
-      content = this.processInternalLinks(content);
+      content = processInternalLinks(content);
       notice.setMessage("\u6B63\u5728\u83B7\u53D6\u5FAE\u4FE1\u516C\u4F17\u53F7\u6388\u6743...");
-      const accessToken = await this.getAccessToken();
+      const accessToken = await this.api.getAccessToken();
       notice.setMessage("\u6B63\u5728\u5904\u7406\u6587\u6863\u4E2D\u7684\u56FE\u7247...");
-      content = await this.processContentImages(content, accessToken, activeFile);
+      content = await processContentImages(content, accessToken, activeFile, this.api.uploadSingleImage.bind(this.api), this.app);
       notice.setMessage("\u6B63\u5728\u7F8E\u5316\u6587\u6863\u5185\u5BB9...");
-      content = this.beautifyContentForWechat(content);
+      content = beautifyContentForWechat(content);
       let coverMediaId = "";
       if (coverImage) {
         notice.setMessage("\u6B63\u5728\u4E0A\u4F20\u5C01\u9762\u56FE\u7247...");
-        coverMediaId = await this.uploadCoverImage(accessToken, coverImage);
+        coverMediaId = await this.api.uploadCoverImage(accessToken, coverImage);
       }
       notice.setMessage("\u6B63\u5728\u4E0A\u4F20\u81F3\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F\u7BB1...");
-      const draftResult = await this.createDraft(accessToken, activeFile.basename, content, coverMediaId);
+      const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content, coverMediaId);
       notice.hide();
-      new import_obsidian.Notice(`\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1\u6210\u529F\uFF01\u8349\u7A3FID: ${draftResult.media_id}`, 1e4);
+      new import_obsidian4.Notice(`\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1\u6210\u529F\uFF01\u8349\u7A3FID: ${draftResult.media_id}`, 1e4);
       console.log("\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1\u6210\u529F:", draftResult);
     } catch (error) {
       notice.hide();
@@ -1321,12 +1508,12 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
       if (error.message) {
         errorMsg += `: ${error.message}`;
       }
-      new import_obsidian.Notice(errorMsg, 15e3);
+      new import_obsidian4.Notice(errorMsg, 15e3);
       console.error("\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1\u9519\u8BEF:", error);
     }
   }
   async publishToWeChatMP() {
-    const notice = new import_obsidian.Notice("\u6B63\u5728\u51C6\u5907\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7...", 0);
+    const notice = new import_obsidian4.Notice("\u6B63\u5728\u51C6\u5907\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7...", 0);
     try {
       if (!this.settings.appId || !this.settings.appSecret) {
         throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7AppID\u548CAppSecret");
@@ -1340,38 +1527,38 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
       notice.setMessage("\u6B63\u5728\u8F6C\u6362\u6587\u6863\u683C\u5F0F...");
       if (this.app.renderMarkdown) {
         content = await this.app.renderMarkdown(content, activeFile, null);
-        content = this.sanitizeHtml(content);
+        content = sanitizeHtml(content);
       } else {
         content = content.replace(/```([\s\S]*?)```/g, (match, code) => {
-          return `<pre><code>${this.escapeHtml(code)}</code></pre>`;
+          return `<pre><code>${escapeHtml(code)}</code></pre>`;
         });
         content = content.replace(/(#{1,6}) (.*?)(\n|$)/g, (match, level, text) => {
-          return `<h${level.length}>${this.escapeHtml(text)}</h${level.length}>`;
+          return `<h${level.length}>${escapeHtml(text)}</h${level.length}>`;
         });
         content = content.replace(/\*\*(.*?)\*\*/g, (match, text) => {
-          return `<strong>${this.escapeHtml(text)}</strong>`;
+          return `<strong>${escapeHtml(text)}</strong>`;
         });
         content = content.replace(/\*(.*?)\*/g, (match, text) => {
-          return `<em>${this.escapeHtml(text)}</em>`;
+          return `<em>${escapeHtml(text)}</em>`;
         });
         content = content.replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
-          return `<a href="${this.escapeHtml(url)}" target="_blank">${this.escapeHtml(text)}</a>`;
+          return `<a href="${escapeHtml(url)}" target="_blank">${escapeHtml(text)}</a>`;
         });
         content = content.replace(/\n/g, "<br>");
       }
-      content = this.processInternalLinks(content);
+      content = processInternalLinks(content);
       notice.setMessage("\u6B63\u5728\u83B7\u53D6\u5FAE\u4FE1\u516C\u4F17\u53F7\u6388\u6743...");
-      const accessToken = await this.getAccessToken();
+      const accessToken = await this.api.getAccessToken();
       notice.setMessage("\u6B63\u5728\u5904\u7406\u6587\u6863\u4E2D\u7684\u56FE\u7247...");
-      content = await this.processContentImages(content, accessToken, activeFile);
+      content = await processContentImages(content, accessToken, activeFile, this.api.uploadSingleImage.bind(this.api), this.app);
       notice.setMessage("\u6B63\u5728\u7F8E\u5316\u6587\u6863\u5185\u5BB9...");
-      content = this.beautifyContentForWechat(content);
+      content = beautifyContentForWechat(content);
       notice.setMessage("\u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u516C\u4F17\u53F7\u8349\u7A3F...");
-      const draftResult = await this.createDraft(accessToken, activeFile.basename, content);
+      const draftResult = await this.api.createDraft(accessToken, activeFile.basename, content);
       notice.setMessage("\u6B63\u5728\u53D1\u5E03\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7...");
-      const publishResult = await this.publishDraft(accessToken, draftResult.media_id);
+      const publishResult = await this.api.publishDraft(accessToken, draftResult.media_id);
       notice.hide();
-      new import_obsidian.Notice(`\u53D1\u5E03\u6210\u529F\uFF01\u6587\u7AE0ID: ${publishResult.article_id}`, 1e4);
+      new import_obsidian4.Notice(`\u53D1\u5E03\u6210\u529F\uFF01\u6587\u7AE0ID: ${publishResult.article_id}`, 1e4);
       console.log("\u53D1\u5E03\u6210\u529F:", publishResult);
     } catch (error) {
       notice.hide();
@@ -1379,167 +1566,9 @@ var WeChatMPPublisher = class extends import_obsidian.Plugin {
       if (error.message) {
         errorMsg += `: ${error.message}`;
       }
-      new import_obsidian.Notice(errorMsg, 15e3);
+      new import_obsidian4.Notice(errorMsg, 15e3);
       console.error("\u53D1\u5E03\u9519\u8BEF:", error);
     }
-  }
-};
-var PublisherSidebarView = class extends import_obsidian.ItemView {
-  constructor(leaf, plugin) {
-    super(leaf);
-    this.plugin = plugin;
-    this.coverImage = "";
-  }
-  getViewType() {
-    return "wechat-mp-publisher-sidebar";
-  }
-  getDisplayText() {
-    return "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F";
-  }
-  getIcon() {
-    return "paper-plane";
-  }
-  async onOpen() {
-    const container = this.contentEl;
-    container.empty();
-    const titleEl = container.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u9762\u677F" });
-    titleEl.style.marginBottom = "20px";
-    const previewButton = container.createEl("button", { text: "\u9884\u89C8\u5F53\u524D\u6587\u6863" });
-    previewButton.className = "mod-cta";
-    previewButton.style.width = "100%";
-    previewButton.style.marginBottom = "10px";
-    previewButton.style.padding = "8px";
-    previewButton.addEventListener("click", () => {
-      if (this.coverFile) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          this.plugin.previewCurrentDocument(event.target.result);
-        };
-        reader.readAsDataURL(this.coverFile);
-      } else {
-        this.plugin.previewCurrentDocument();
-      }
-    });
-    const coverSection = container.createEl("div");
-    coverSection.style.marginBottom = "15px";
-    const coverLabel = coverSection.createEl("h3", { text: "\u5C01\u9762\u8BBE\u7F6E" });
-    coverLabel.style.fontSize = "14px";
-    coverLabel.style.marginBottom = "8px";
-    const coverInput = coverSection.createEl("input", {
-      type: "file",
-      accept: "image/*"
-    });
-    coverInput.style.width = "100%";
-    coverInput.style.padding = "8px";
-    coverInput.style.marginBottom = "8px";
-    const coverPreview = coverSection.createEl("div");
-    coverPreview.style.border = "1px solid var(--background-modifier-border)";
-    coverPreview.style.borderRadius = "4px";
-    coverPreview.style.height = "100px";
-    coverPreview.style.overflow = "hidden";
-    coverPreview.style.display = "flex";
-    coverPreview.style.alignItems = "center";
-    coverPreview.style.justifyContent = "center";
-    coverPreview.textContent = "\u5C01\u9762\u9884\u89C8";
-    this.coverFile = null;
-    coverInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        this.coverFile = file;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          coverPreview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        this.coverFile = null;
-        coverPreview.innerHTML = "\u5C01\u9762\u9884\u89C8";
-      }
-    });
-    const uploadButton = container.createEl("button", { text: "\u4E0A\u4F20\u81F3\u8349\u7A3F\u7BB1" });
-    uploadButton.className = "mod-cta";
-    uploadButton.style.width = "100%";
-    uploadButton.style.marginBottom = "10px";
-    uploadButton.style.padding = "8px";
-    uploadButton.addEventListener("click", async () => {
-      await this.plugin.uploadToDraftBox(this.coverFile);
-    });
-    const networkTestSection = container.createEl("div");
-    networkTestSection.style.marginBottom = "15px";
-    const networkTestLabel = networkTestSection.createEl("h3", { text: "\u7F51\u7EDC\u6D4B\u8BD5" });
-    networkTestLabel.style.fontSize = "14px";
-    networkTestLabel.style.marginBottom = "8px";
-    const networkTestInput = networkTestSection.createEl("input", {
-      type: "text",
-      placeholder: "http://baidu.com"
-    });
-    networkTestInput.style.width = "100%";
-    networkTestInput.style.padding = "8px";
-    networkTestInput.style.marginBottom = "8px";
-    networkTestInput.style.border = "1px solid var(--background-modifier-border)";
-    networkTestInput.style.borderRadius = "4px";
-    networkTestInput.value = this.plugin.settings.networkTestUrl;
-    const networkTestButton = networkTestSection.createEl("button", { text: "\u6D4B\u8BD5\u8FDE\u63A5" });
-    networkTestButton.style.width = "100%";
-    networkTestButton.style.padding = "8px";
-    networkTestButton.style.marginBottom = "8px";
-    networkTestButton.addEventListener("click", async () => {
-      const testUrl = networkTestInput.value || this.plugin.settings.networkTestUrl;
-      await this.plugin.testNetworkConnection(testUrl);
-    });
-    networkTestInput.addEventListener("change", async (e) => {
-      this.plugin.settings.networkTestUrl = e.target.value;
-      await this.plugin.saveSettings();
-    });
-    const networkTestNote = networkTestSection.createEl("p");
-    networkTestNote.style.fontSize = "12px";
-    networkTestNote.style.color = "var(--text-muted)";
-    networkTestNote.textContent = "\u63D0\u793A\uFF1A\u53EF\u4EE5\u6D4B\u8BD5\u4EFB\u4F55HTTP/HTTPS\u5730\u5740\uFF0C\u5305\u62EC\u5FAE\u4FE1\u516C\u4F17\u53F7API\u5730\u5740";
-    const apiTestButton = container.createEl("button", { text: "API\u6D4B\u8BD5" });
-    apiTestButton.style.width = "100%";
-    apiTestButton.style.marginBottom = "10px";
-    apiTestButton.style.padding = "8px";
-    apiTestButton.addEventListener("click", async () => {
-      await this.plugin.testAPIKeys();
-    });
-    const noteEl = container.createEl("p");
-    noteEl.style.fontSize = "12px";
-    noteEl.style.color = "var(--text-muted)";
-    noteEl.textContent = "\u63D0\u793A\uFF1A\u4E0A\u4F20\u524D\u8BF7\u786E\u4FDD\u5DF2\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5FAE\u4FE1\u516C\u4F17\u53F7\u4FE1\u606F";
-  }
-  async onClose() {
-    this.contentEl.empty();
-  }
-};
-var NetworkTestSettingsTab = class extends import_obsidian.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl("h2", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u53D1\u5E03\u8BBE\u7F6E" });
-    containerEl.createEl("h3", { text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u914D\u7F6E" });
-    new import_obsidian.Setting(containerEl).setName("AppID").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppID").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppID").setValue(this.plugin.settings.appId).onChange(async (value) => {
-      this.plugin.settings.appId = value;
-      await this.plugin.saveSettings();
-    }));
-    new import_obsidian.Setting(containerEl).setName("AppSecret").setDesc("\u5FAE\u4FE1\u516C\u4F17\u53F7AppSecret").addText((text) => text.setPlaceholder("\u8BF7\u8F93\u5165AppSecret").setValue(this.plugin.settings.appSecret).onChange(async (value) => {
-      this.plugin.settings.appSecret = value;
-      await this.plugin.saveSettings();
-    }));
-    containerEl.createEl("h3", { text: "\u7F51\u7EDC\u914D\u7F6E" });
-    new import_obsidian.Setting(containerEl).setName("\u7F51\u7EDC\u8BF7\u6C42\u8D85\u65F6\u65F6\u95F4").setDesc("\u7F51\u7EDC\u8BF7\u6C42\u7684\u8D85\u65F6\u65F6\u95F4\uFF08\u6BEB\u79D2\uFF09").addText((text) => text.setPlaceholder("5000").setValue(this.plugin.settings.timeout.toString()).onChange(async (value) => {
-      const timeout = parseInt(value);
-      if (!isNaN(timeout) && timeout > 0) {
-        this.plugin.settings.timeout = timeout;
-        await this.plugin.saveSettings();
-        new import_obsidian.Notice("\u8D85\u65F6\u65F6\u95F4\u5DF2\u66F4\u65B0", 2e3);
-      } else {
-        new import_obsidian.Notice("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u8D85\u65F6\u65F6\u95F4", 2e3);
-      }
-    }));
   }
 };
 var main_default = WeChatMPPublisher;

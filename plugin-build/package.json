@@ -1,0 +1,24 @@
+{
+  "name": "obsidin-to-mp",
+  "version": "1.0.0",
+  "description": "Obsidian plugin to publish notes to WeChat Official Account",
+  "main": "build/main.js",
+  "scripts": {
+    "build": "node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "wechat",
+    "mp"
+  ],
+  "author": "liubinfighter",
+  "license": "MIT",
+  "devDependencies": {
+    "builtin-modules": "^4.0.0",
+    "esbuild": "^0.20.0",
+    "obsidian": "latest",
+    "typescript": "^5.3.3"
+  }
+}
