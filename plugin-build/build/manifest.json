@@ -5,9 +5,6 @@
   "minAppVersion": "1.1.0",
   "description": "将Markdown笔记转换并发布到微信公众号草稿箱!",
   "author": "Qysec",
-  "authorUrl": "https://github.com/EATMELONSEC/OpsToMP",
-  "isDesktopOnly": false,
-  "permissions": [
-    "network"
-  ]
+  "authorUrl": "https://github.com/EATMELONSEC",
+  "isDesktopOnly": false
 }
