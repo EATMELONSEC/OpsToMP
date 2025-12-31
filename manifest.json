@@ -3,7 +3,7 @@
   "name": "OpsToMP",
   "version": "1.1.0",
   "minAppVersion": "1.1.0",
-  "description": "Convert and post Obsidian notes to the wechat official account Draft Box",
+  "description": "Convert and post Obsidian notes to the wechat official account Draft Box.",
   "author": "Qysec",
   "authorUrl": "https://github.com/EATMELONSEC/OpsToMP",
   "isDesktopOnly": false,
